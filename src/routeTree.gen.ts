@@ -10,33 +10,680 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LangRouteRouteImport } from './routes/$lang/route'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AppRouteRouteImport } from './routes/app/route'
+import { Route as AssinarGratisRouteImport } from './routes/assinar-gratis'
+import { Route as CondicoesCedroRouteImport } from './routes/condicoes-cedro'
+import { Route as DesenvolvedoresRouteImport } from './routes/desenvolvedores'
+import { Route as EntrarRouteImport } from './routes/entrar'
+import { Route as PrivacidadeRouteImport } from './routes/privacidade'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as TermosRouteImport } from './routes/termos'
+import { Route as TitularRouteImport } from './routes/titular'
+import { Route as ValidarRouteImport } from './routes/validar'
+import { Route as LangIndexRouteImport } from './routes/$lang/index'
+import { Route as LangAssinarGratisRouteImport } from './routes/$lang/assinar-gratis'
+import { Route as LangCondicoesCedroRouteImport } from './routes/$lang/condicoes-cedro'
+import { Route as LangDesenvolvedoresRouteImport } from './routes/$lang/desenvolvedores'
+import { Route as LangEntrarRouteImport } from './routes/$lang/entrar'
+import { Route as LangPrivacidadeRouteImport } from './routes/$lang/privacidade'
+import { Route as LangTermosRouteImport } from './routes/$lang/termos'
+import { Route as LangTitularRouteImport } from './routes/$lang/titular'
+import { Route as LangValidarRouteImport } from './routes/$lang/validar'
+import { Route as AppShellRouteImport } from './routes/app/_shell'
+import { Route as AppForgotPasswordRouteImport } from './routes/app/forgot-password'
+import { Route as AppLoginRouteImport } from './routes/app/login'
+import { Route as AppResetPasswordRouteImport } from './routes/app/reset-password'
+import { Route as AppSignupRouteImport } from './routes/app/signup'
+import { Route as DTokenRouteImport } from './routes/d.$token'
+import { Route as FTokenRouteImport } from './routes/f.$token'
+import { Route as STokenRouteImport } from './routes/s.$token'
+import { Route as LangLpSlugRouteImport } from './routes/$lang/lp.$slug'
+import { Route as AppShellIndexRouteImport } from './routes/app/_shell/index'
+import { Route as AppShellSectionRouteImport } from './routes/app/_shell/$section'
+import { Route as AppShellContactsRouteImport } from './routes/app/_shell/contacts'
+import { Route as AppShellFormsRouteImport } from './routes/app/_shell/forms'
+import { Route as AppShellIntegrationsRouteImport } from './routes/app/_shell/integrations'
+import { Route as AppShellOrganizationRouteImport } from './routes/app/_shell/organization'
+import { Route as AppShellPlanRouteImport } from './routes/app/_shell/plan'
+import { Route as AppShellProcessesRouteImport } from './routes/app/_shell/processes'
+import { Route as AppShellReportsRouteImport } from './routes/app/_shell/reports'
+import { Route as AppShellSendRouteImport } from './routes/app/_shell/send'
+import { Route as AppShellSettingsRouteImport } from './routes/app/_shell/settings'
+import { Route as AppShellSignRouteImport } from './routes/app/_shell/sign'
+import { Route as AppInviteTokenRouteImport } from './routes/app/invite.$token'
+import { Route as AppShellBulkIndexRouteImport } from './routes/app/_shell/bulk/index'
+import { Route as AppShellBulkIdRouteImport } from './routes/app/_shell/bulk/$id'
+import { Route as AppShellBulkNewRouteImport } from './routes/app/_shell/bulk/new'
+import { Route as AppShellDocumentsIndexRouteImport } from './routes/app/_shell/documents/index'
+import { Route as AppShellDocumentsIdRouteImport } from './routes/app/_shell/documents/$id'
+import { Route as AppShellTemplatesIndexRouteImport } from './routes/app/_shell/templates/index'
+import { Route as AppShellTemplatesIdRouteImport } from './routes/app/_shell/templates/$id'
+import { Route as AppShellTemplatesNewRouteImport } from './routes/app/_shell/templates/new'
+import { Route as AppShellTemplatesEditIdRouteImport } from './routes/app/_shell/templates/edit.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LangRouteRoute = LangRouteRouteImport.update({
+  id: '/$lang',
+  path: '/$lang',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRouteRoute = AppRouteRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AssinarGratisRoute = AssinarGratisRouteImport.update({
+  id: '/assinar-gratis',
+  path: '/assinar-gratis',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CondicoesCedroRoute = CondicoesCedroRouteImport.update({
+  id: '/condicoes-cedro',
+  path: '/condicoes-cedro',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DesenvolvedoresRoute = DesenvolvedoresRouteImport.update({
+  id: '/desenvolvedores',
+  path: '/desenvolvedores',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EntrarRoute = EntrarRouteImport.update({
+  id: '/entrar',
+  path: '/entrar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacidadeRoute = PrivacidadeRouteImport.update({
+  id: '/privacidade',
+  path: '/privacidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermosRoute = TermosRouteImport.update({
+  id: '/termos',
+  path: '/termos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TitularRoute = TitularRouteImport.update({
+  id: '/titular',
+  path: '/titular',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ValidarRoute = ValidarRouteImport.update({
+  id: '/validar',
+  path: '/validar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LangIndexRoute = LangIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => LangRouteRoute,
+} as any)
+const LangAssinarGratisRoute = LangAssinarGratisRouteImport.update({
+  id: '/assinar-gratis',
+  path: '/assinar-gratis',
+  getParentRoute: () => LangRouteRoute,
+} as any)
+const LangCondicoesCedroRoute = LangCondicoesCedroRouteImport.update({
+  id: '/condicoes-cedro',
+  path: '/condicoes-cedro',
+  getParentRoute: () => LangRouteRoute,
+} as any)
+const LangDesenvolvedoresRoute = LangDesenvolvedoresRouteImport.update({
+  id: '/desenvolvedores',
+  path: '/desenvolvedores',
+  getParentRoute: () => LangRouteRoute,
+} as any)
+const LangEntrarRoute = LangEntrarRouteImport.update({
+  id: '/entrar',
+  path: '/entrar',
+  getParentRoute: () => LangRouteRoute,
+} as any)
+const LangPrivacidadeRoute = LangPrivacidadeRouteImport.update({
+  id: '/privacidade',
+  path: '/privacidade',
+  getParentRoute: () => LangRouteRoute,
+} as any)
+const LangTermosRoute = LangTermosRouteImport.update({
+  id: '/termos',
+  path: '/termos',
+  getParentRoute: () => LangRouteRoute,
+} as any)
+const LangTitularRoute = LangTitularRouteImport.update({
+  id: '/titular',
+  path: '/titular',
+  getParentRoute: () => LangRouteRoute,
+} as any)
+const LangValidarRoute = LangValidarRouteImport.update({
+  id: '/validar',
+  path: '/validar',
+  getParentRoute: () => LangRouteRoute,
+} as any)
+const AppShellRoute = AppShellRouteImport.update({
+  id: '/_shell',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppForgotPasswordRoute = AppForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppLoginRoute = AppLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppResetPasswordRoute = AppResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppSignupRoute = AppSignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const DTokenRoute = DTokenRouteImport.update({
+  id: '/d/$token',
+  path: '/d/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FTokenRoute = FTokenRouteImport.update({
+  id: '/f/$token',
+  path: '/f/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const STokenRoute = STokenRouteImport.update({
+  id: '/s/$token',
+  path: '/s/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LangLpSlugRoute = LangLpSlugRouteImport.update({
+  id: '/lp/$slug',
+  path: '/lp/$slug',
+  getParentRoute: () => LangRouteRoute,
+} as any)
+const AppShellIndexRoute = AppShellIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppShellRoute,
+} as any)
+const AppShellSectionRoute = AppShellSectionRouteImport.update({
+  id: '/$section',
+  path: '/$section',
+  getParentRoute: () => AppShellRoute,
+} as any)
+const AppShellContactsRoute = AppShellContactsRouteImport.update({
+  id: '/contacts',
+  path: '/contacts',
+  getParentRoute: () => AppShellRoute,
+} as any)
+const AppShellFormsRoute = AppShellFormsRouteImport.update({
+  id: '/forms',
+  path: '/forms',
+  getParentRoute: () => AppShellRoute,
+} as any)
+const AppShellIntegrationsRoute = AppShellIntegrationsRouteImport.update({
+  id: '/integrations',
+  path: '/integrations',
+  getParentRoute: () => AppShellRoute,
+} as any)
+const AppShellOrganizationRoute = AppShellOrganizationRouteImport.update({
+  id: '/organization',
+  path: '/organization',
+  getParentRoute: () => AppShellRoute,
+} as any)
+const AppShellPlanRoute = AppShellPlanRouteImport.update({
+  id: '/plan',
+  path: '/plan',
+  getParentRoute: () => AppShellRoute,
+} as any)
+const AppShellProcessesRoute = AppShellProcessesRouteImport.update({
+  id: '/processes',
+  path: '/processes',
+  getParentRoute: () => AppShellRoute,
+} as any)
+const AppShellReportsRoute = AppShellReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AppShellRoute,
+} as any)
+const AppShellSendRoute = AppShellSendRouteImport.update({
+  id: '/send',
+  path: '/send',
+  getParentRoute: () => AppShellRoute,
+} as any)
+const AppShellSettingsRoute = AppShellSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppShellRoute,
+} as any)
+const AppShellSignRoute = AppShellSignRouteImport.update({
+  id: '/sign',
+  path: '/sign',
+  getParentRoute: () => AppShellRoute,
+} as any)
+const AppInviteTokenRoute = AppInviteTokenRouteImport.update({
+  id: '/invite/$token',
+  path: '/invite/$token',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppShellBulkIndexRoute = AppShellBulkIndexRouteImport.update({
+  id: '/bulk/',
+  path: '/bulk/',
+  getParentRoute: () => AppShellRoute,
+} as any)
+const AppShellBulkIdRoute = AppShellBulkIdRouteImport.update({
+  id: '/bulk/$id',
+  path: '/bulk/$id',
+  getParentRoute: () => AppShellRoute,
+} as any)
+const AppShellBulkNewRoute = AppShellBulkNewRouteImport.update({
+  id: '/bulk/new',
+  path: '/bulk/new',
+  getParentRoute: () => AppShellRoute,
+} as any)
+const AppShellDocumentsIndexRoute = AppShellDocumentsIndexRouteImport.update({
+  id: '/documents/',
+  path: '/documents/',
+  getParentRoute: () => AppShellRoute,
+} as any)
+const AppShellDocumentsIdRoute = AppShellDocumentsIdRouteImport.update({
+  id: '/documents/$id',
+  path: '/documents/$id',
+  getParentRoute: () => AppShellRoute,
+} as any)
+const AppShellTemplatesIndexRoute = AppShellTemplatesIndexRouteImport.update({
+  id: '/templates/',
+  path: '/templates/',
+  getParentRoute: () => AppShellRoute,
+} as any)
+const AppShellTemplatesIdRoute = AppShellTemplatesIdRouteImport.update({
+  id: '/templates/$id',
+  path: '/templates/$id',
+  getParentRoute: () => AppShellRoute,
+} as any)
+const AppShellTemplatesNewRoute = AppShellTemplatesNewRouteImport.update({
+  id: '/templates/new',
+  path: '/templates/new',
+  getParentRoute: () => AppShellRoute,
+} as any)
+const AppShellTemplatesEditIdRoute = AppShellTemplatesEditIdRouteImport.update({
+  id: '/templates/edit/$id',
+  path: '/templates/edit/$id',
+  getParentRoute: () => AppShellRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/$lang': typeof LangRouteRouteWithChildren
+  '/app': typeof AppRouteRouteWithChildren
+  '/admin': typeof AdminRoute
+  '/assinar-gratis': typeof AssinarGratisRoute
+  '/condicoes-cedro': typeof CondicoesCedroRoute
+  '/desenvolvedores': typeof DesenvolvedoresRoute
+  '/entrar': typeof EntrarRoute
+  '/privacidade': typeof PrivacidadeRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/termos': typeof TermosRoute
+  '/titular': typeof TitularRoute
+  '/validar': typeof ValidarRoute
+  '/$lang/assinar-gratis': typeof LangAssinarGratisRoute
+  '/$lang/condicoes-cedro': typeof LangCondicoesCedroRoute
+  '/$lang/desenvolvedores': typeof LangDesenvolvedoresRoute
+  '/$lang/entrar': typeof LangEntrarRoute
+  '/$lang/privacidade': typeof LangPrivacidadeRoute
+  '/$lang/termos': typeof LangTermosRoute
+  '/$lang/titular': typeof LangTitularRoute
+  '/$lang/validar': typeof LangValidarRoute
+  '/app/forgot-password': typeof AppForgotPasswordRoute
+  '/app/login': typeof AppLoginRoute
+  '/app/reset-password': typeof AppResetPasswordRoute
+  '/app/signup': typeof AppSignupRoute
+  '/d/$token': typeof DTokenRoute
+  '/f/$token': typeof FTokenRoute
+  '/s/$token': typeof STokenRoute
+  '/$lang/': typeof LangIndexRoute
+  '/$lang/lp/$slug': typeof LangLpSlugRoute
+  '/app/$section': typeof AppShellSectionRoute
+  '/app/contacts': typeof AppShellContactsRoute
+  '/app/forms': typeof AppShellFormsRoute
+  '/app/integrations': typeof AppShellIntegrationsRoute
+  '/app/organization': typeof AppShellOrganizationRoute
+  '/app/plan': typeof AppShellPlanRoute
+  '/app/processes': typeof AppShellProcessesRoute
+  '/app/reports': typeof AppShellReportsRoute
+  '/app/send': typeof AppShellSendRoute
+  '/app/settings': typeof AppShellSettingsRoute
+  '/app/sign': typeof AppShellSignRoute
+  '/app/invite/$token': typeof AppInviteTokenRoute
+  '/app/': typeof AppShellIndexRoute
+  '/app/bulk/$id': typeof AppShellBulkIdRoute
+  '/app/bulk/new': typeof AppShellBulkNewRoute
+  '/app/documents/$id': typeof AppShellDocumentsIdRoute
+  '/app/templates/$id': typeof AppShellTemplatesIdRoute
+  '/app/templates/new': typeof AppShellTemplatesNewRoute
+  '/app/bulk/': typeof AppShellBulkIndexRoute
+  '/app/documents/': typeof AppShellDocumentsIndexRoute
+  '/app/templates/': typeof AppShellTemplatesIndexRoute
+  '/app/templates/edit/$id': typeof AppShellTemplatesEditIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/app': typeof AppShellIndexRoute
+  '/admin': typeof AdminRoute
+  '/assinar-gratis': typeof AssinarGratisRoute
+  '/condicoes-cedro': typeof CondicoesCedroRoute
+  '/desenvolvedores': typeof DesenvolvedoresRoute
+  '/entrar': typeof EntrarRoute
+  '/privacidade': typeof PrivacidadeRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/termos': typeof TermosRoute
+  '/titular': typeof TitularRoute
+  '/validar': typeof ValidarRoute
+  '/$lang/assinar-gratis': typeof LangAssinarGratisRoute
+  '/$lang/condicoes-cedro': typeof LangCondicoesCedroRoute
+  '/$lang/desenvolvedores': typeof LangDesenvolvedoresRoute
+  '/$lang/entrar': typeof LangEntrarRoute
+  '/$lang/privacidade': typeof LangPrivacidadeRoute
+  '/$lang/termos': typeof LangTermosRoute
+  '/$lang/titular': typeof LangTitularRoute
+  '/$lang/validar': typeof LangValidarRoute
+  '/app/forgot-password': typeof AppForgotPasswordRoute
+  '/app/login': typeof AppLoginRoute
+  '/app/reset-password': typeof AppResetPasswordRoute
+  '/app/signup': typeof AppSignupRoute
+  '/d/$token': typeof DTokenRoute
+  '/f/$token': typeof FTokenRoute
+  '/s/$token': typeof STokenRoute
+  '/$lang': typeof LangIndexRoute
+  '/$lang/lp/$slug': typeof LangLpSlugRoute
+  '/app/$section': typeof AppShellSectionRoute
+  '/app/contacts': typeof AppShellContactsRoute
+  '/app/forms': typeof AppShellFormsRoute
+  '/app/integrations': typeof AppShellIntegrationsRoute
+  '/app/organization': typeof AppShellOrganizationRoute
+  '/app/plan': typeof AppShellPlanRoute
+  '/app/processes': typeof AppShellProcessesRoute
+  '/app/reports': typeof AppShellReportsRoute
+  '/app/send': typeof AppShellSendRoute
+  '/app/settings': typeof AppShellSettingsRoute
+  '/app/sign': typeof AppShellSignRoute
+  '/app/invite/$token': typeof AppInviteTokenRoute
+  '/app/bulk/$id': typeof AppShellBulkIdRoute
+  '/app/bulk/new': typeof AppShellBulkNewRoute
+  '/app/documents/$id': typeof AppShellDocumentsIdRoute
+  '/app/templates/$id': typeof AppShellTemplatesIdRoute
+  '/app/templates/new': typeof AppShellTemplatesNewRoute
+  '/app/bulk': typeof AppShellBulkIndexRoute
+  '/app/documents': typeof AppShellDocumentsIndexRoute
+  '/app/templates': typeof AppShellTemplatesIndexRoute
+  '/app/templates/edit/$id': typeof AppShellTemplatesEditIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/$lang': typeof LangRouteRouteWithChildren
+  '/app': typeof AppRouteRouteWithChildren
+  '/admin': typeof AdminRoute
+  '/assinar-gratis': typeof AssinarGratisRoute
+  '/condicoes-cedro': typeof CondicoesCedroRoute
+  '/desenvolvedores': typeof DesenvolvedoresRoute
+  '/entrar': typeof EntrarRoute
+  '/privacidade': typeof PrivacidadeRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/termos': typeof TermosRoute
+  '/titular': typeof TitularRoute
+  '/validar': typeof ValidarRoute
+  '/$lang/assinar-gratis': typeof LangAssinarGratisRoute
+  '/$lang/condicoes-cedro': typeof LangCondicoesCedroRoute
+  '/$lang/desenvolvedores': typeof LangDesenvolvedoresRoute
+  '/$lang/entrar': typeof LangEntrarRoute
+  '/$lang/privacidade': typeof LangPrivacidadeRoute
+  '/$lang/termos': typeof LangTermosRoute
+  '/$lang/titular': typeof LangTitularRoute
+  '/$lang/validar': typeof LangValidarRoute
+  '/app/_shell': typeof AppShellRouteWithChildren
+  '/app/forgot-password': typeof AppForgotPasswordRoute
+  '/app/login': typeof AppLoginRoute
+  '/app/reset-password': typeof AppResetPasswordRoute
+  '/app/signup': typeof AppSignupRoute
+  '/d/$token': typeof DTokenRoute
+  '/f/$token': typeof FTokenRoute
+  '/s/$token': typeof STokenRoute
+  '/$lang/': typeof LangIndexRoute
+  '/$lang/lp/$slug': typeof LangLpSlugRoute
+  '/app/_shell/$section': typeof AppShellSectionRoute
+  '/app/_shell/contacts': typeof AppShellContactsRoute
+  '/app/_shell/forms': typeof AppShellFormsRoute
+  '/app/_shell/integrations': typeof AppShellIntegrationsRoute
+  '/app/_shell/organization': typeof AppShellOrganizationRoute
+  '/app/_shell/plan': typeof AppShellPlanRoute
+  '/app/_shell/processes': typeof AppShellProcessesRoute
+  '/app/_shell/reports': typeof AppShellReportsRoute
+  '/app/_shell/send': typeof AppShellSendRoute
+  '/app/_shell/settings': typeof AppShellSettingsRoute
+  '/app/_shell/sign': typeof AppShellSignRoute
+  '/app/invite/$token': typeof AppInviteTokenRoute
+  '/app/_shell/': typeof AppShellIndexRoute
+  '/app/_shell/bulk/$id': typeof AppShellBulkIdRoute
+  '/app/_shell/bulk/new': typeof AppShellBulkNewRoute
+  '/app/_shell/documents/$id': typeof AppShellDocumentsIdRoute
+  '/app/_shell/templates/$id': typeof AppShellTemplatesIdRoute
+  '/app/_shell/templates/new': typeof AppShellTemplatesNewRoute
+  '/app/_shell/bulk/': typeof AppShellBulkIndexRoute
+  '/app/_shell/documents/': typeof AppShellDocumentsIndexRoute
+  '/app/_shell/templates/': typeof AppShellTemplatesIndexRoute
+  '/app/_shell/templates/edit/$id': typeof AppShellTemplatesEditIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/$lang'
+    | '/app'
+    | '/admin'
+    | '/assinar-gratis'
+    | '/condicoes-cedro'
+    | '/desenvolvedores'
+    | '/entrar'
+    | '/privacidade'
+    | '/robots.txt'
+    | '/sitemap.xml'
+    | '/termos'
+    | '/titular'
+    | '/validar'
+    | '/$lang/assinar-gratis'
+    | '/$lang/condicoes-cedro'
+    | '/$lang/desenvolvedores'
+    | '/$lang/entrar'
+    | '/$lang/privacidade'
+    | '/$lang/termos'
+    | '/$lang/titular'
+    | '/$lang/validar'
+    | '/app/forgot-password'
+    | '/app/login'
+    | '/app/reset-password'
+    | '/app/signup'
+    | '/d/$token'
+    | '/f/$token'
+    | '/s/$token'
+    | '/$lang/'
+    | '/$lang/lp/$slug'
+    | '/app/$section'
+    | '/app/contacts'
+    | '/app/forms'
+    | '/app/integrations'
+    | '/app/organization'
+    | '/app/plan'
+    | '/app/processes'
+    | '/app/reports'
+    | '/app/send'
+    | '/app/settings'
+    | '/app/sign'
+    | '/app/invite/$token'
+    | '/app/'
+    | '/app/bulk/$id'
+    | '/app/bulk/new'
+    | '/app/documents/$id'
+    | '/app/templates/$id'
+    | '/app/templates/new'
+    | '/app/bulk/'
+    | '/app/documents/'
+    | '/app/templates/'
+    | '/app/templates/edit/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/app'
+    | '/admin'
+    | '/assinar-gratis'
+    | '/condicoes-cedro'
+    | '/desenvolvedores'
+    | '/entrar'
+    | '/privacidade'
+    | '/robots.txt'
+    | '/sitemap.xml'
+    | '/termos'
+    | '/titular'
+    | '/validar'
+    | '/$lang/assinar-gratis'
+    | '/$lang/condicoes-cedro'
+    | '/$lang/desenvolvedores'
+    | '/$lang/entrar'
+    | '/$lang/privacidade'
+    | '/$lang/termos'
+    | '/$lang/titular'
+    | '/$lang/validar'
+    | '/app/forgot-password'
+    | '/app/login'
+    | '/app/reset-password'
+    | '/app/signup'
+    | '/d/$token'
+    | '/f/$token'
+    | '/s/$token'
+    | '/$lang'
+    | '/$lang/lp/$slug'
+    | '/app/$section'
+    | '/app/contacts'
+    | '/app/forms'
+    | '/app/integrations'
+    | '/app/organization'
+    | '/app/plan'
+    | '/app/processes'
+    | '/app/reports'
+    | '/app/send'
+    | '/app/settings'
+    | '/app/sign'
+    | '/app/invite/$token'
+    | '/app/bulk/$id'
+    | '/app/bulk/new'
+    | '/app/documents/$id'
+    | '/app/templates/$id'
+    | '/app/templates/new'
+    | '/app/bulk'
+    | '/app/documents'
+    | '/app/templates'
+    | '/app/templates/edit/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/$lang'
+    | '/app'
+    | '/admin'
+    | '/assinar-gratis'
+    | '/condicoes-cedro'
+    | '/desenvolvedores'
+    | '/entrar'
+    | '/privacidade'
+    | '/robots.txt'
+    | '/sitemap.xml'
+    | '/termos'
+    | '/titular'
+    | '/validar'
+    | '/$lang/assinar-gratis'
+    | '/$lang/condicoes-cedro'
+    | '/$lang/desenvolvedores'
+    | '/$lang/entrar'
+    | '/$lang/privacidade'
+    | '/$lang/termos'
+    | '/$lang/titular'
+    | '/$lang/validar'
+    | '/app/_shell'
+    | '/app/forgot-password'
+    | '/app/login'
+    | '/app/reset-password'
+    | '/app/signup'
+    | '/d/$token'
+    | '/f/$token'
+    | '/s/$token'
+    | '/$lang/'
+    | '/$lang/lp/$slug'
+    | '/app/_shell/$section'
+    | '/app/_shell/contacts'
+    | '/app/_shell/forms'
+    | '/app/_shell/integrations'
+    | '/app/_shell/organization'
+    | '/app/_shell/plan'
+    | '/app/_shell/processes'
+    | '/app/_shell/reports'
+    | '/app/_shell/send'
+    | '/app/_shell/settings'
+    | '/app/_shell/sign'
+    | '/app/invite/$token'
+    | '/app/_shell/'
+    | '/app/_shell/bulk/$id'
+    | '/app/_shell/bulk/new'
+    | '/app/_shell/documents/$id'
+    | '/app/_shell/templates/$id'
+    | '/app/_shell/templates/new'
+    | '/app/_shell/bulk/'
+    | '/app/_shell/documents/'
+    | '/app/_shell/templates/'
+    | '/app/_shell/templates/edit/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  LangRouteRoute: typeof LangRouteRouteWithChildren
+  AppRouteRoute: typeof AppRouteRouteWithChildren
+  AdminRoute: typeof AdminRoute
+  AssinarGratisRoute: typeof AssinarGratisRoute
+  CondicoesCedroRoute: typeof CondicoesCedroRoute
+  DesenvolvedoresRoute: typeof DesenvolvedoresRoute
+  EntrarRoute: typeof EntrarRoute
+  PrivacidadeRoute: typeof PrivacidadeRoute
+  RobotsDottxtRoute: typeof RobotsDottxtRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  TermosRoute: typeof TermosRoute
+  TitularRoute: typeof TitularRoute
+  ValidarRoute: typeof ValidarRoute
+  DTokenRoute: typeof DTokenRoute
+  FTokenRoute: typeof FTokenRoute
+  STokenRoute: typeof STokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +695,502 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$lang': {
+      id: '/$lang'
+      path: '/$lang'
+      fullPath: '/$lang'
+      preLoaderRoute: typeof LangRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/assinar-gratis': {
+      id: '/assinar-gratis'
+      path: '/assinar-gratis'
+      fullPath: '/assinar-gratis'
+      preLoaderRoute: typeof AssinarGratisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/condicoes-cedro': {
+      id: '/condicoes-cedro'
+      path: '/condicoes-cedro'
+      fullPath: '/condicoes-cedro'
+      preLoaderRoute: typeof CondicoesCedroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/desenvolvedores': {
+      id: '/desenvolvedores'
+      path: '/desenvolvedores'
+      fullPath: '/desenvolvedores'
+      preLoaderRoute: typeof DesenvolvedoresRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/entrar': {
+      id: '/entrar'
+      path: '/entrar'
+      fullPath: '/entrar'
+      preLoaderRoute: typeof EntrarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacidade': {
+      id: '/privacidade'
+      path: '/privacidade'
+      fullPath: '/privacidade'
+      preLoaderRoute: typeof PrivacidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/termos': {
+      id: '/termos'
+      path: '/termos'
+      fullPath: '/termos'
+      preLoaderRoute: typeof TermosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/titular': {
+      id: '/titular'
+      path: '/titular'
+      fullPath: '/titular'
+      preLoaderRoute: typeof TitularRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/validar': {
+      id: '/validar'
+      path: '/validar'
+      fullPath: '/validar'
+      preLoaderRoute: typeof ValidarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$lang/': {
+      id: '/$lang/'
+      path: '/'
+      fullPath: '/$lang/'
+      preLoaderRoute: typeof LangIndexRouteImport
+      parentRoute: typeof LangRouteRoute
+    }
+    '/$lang/assinar-gratis': {
+      id: '/$lang/assinar-gratis'
+      path: '/assinar-gratis'
+      fullPath: '/$lang/assinar-gratis'
+      preLoaderRoute: typeof LangAssinarGratisRouteImport
+      parentRoute: typeof LangRouteRoute
+    }
+    '/$lang/condicoes-cedro': {
+      id: '/$lang/condicoes-cedro'
+      path: '/condicoes-cedro'
+      fullPath: '/$lang/condicoes-cedro'
+      preLoaderRoute: typeof LangCondicoesCedroRouteImport
+      parentRoute: typeof LangRouteRoute
+    }
+    '/$lang/desenvolvedores': {
+      id: '/$lang/desenvolvedores'
+      path: '/desenvolvedores'
+      fullPath: '/$lang/desenvolvedores'
+      preLoaderRoute: typeof LangDesenvolvedoresRouteImport
+      parentRoute: typeof LangRouteRoute
+    }
+    '/$lang/entrar': {
+      id: '/$lang/entrar'
+      path: '/entrar'
+      fullPath: '/$lang/entrar'
+      preLoaderRoute: typeof LangEntrarRouteImport
+      parentRoute: typeof LangRouteRoute
+    }
+    '/$lang/privacidade': {
+      id: '/$lang/privacidade'
+      path: '/privacidade'
+      fullPath: '/$lang/privacidade'
+      preLoaderRoute: typeof LangPrivacidadeRouteImport
+      parentRoute: typeof LangRouteRoute
+    }
+    '/$lang/termos': {
+      id: '/$lang/termos'
+      path: '/termos'
+      fullPath: '/$lang/termos'
+      preLoaderRoute: typeof LangTermosRouteImport
+      parentRoute: typeof LangRouteRoute
+    }
+    '/$lang/titular': {
+      id: '/$lang/titular'
+      path: '/titular'
+      fullPath: '/$lang/titular'
+      preLoaderRoute: typeof LangTitularRouteImport
+      parentRoute: typeof LangRouteRoute
+    }
+    '/$lang/validar': {
+      id: '/$lang/validar'
+      path: '/validar'
+      fullPath: '/$lang/validar'
+      preLoaderRoute: typeof LangValidarRouteImport
+      parentRoute: typeof LangRouteRoute
+    }
+    '/app/_shell': {
+      id: '/app/_shell'
+      path: ''
+      fullPath: '/app'
+      preLoaderRoute: typeof AppShellRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/forgot-password': {
+      id: '/app/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/app/forgot-password'
+      preLoaderRoute: typeof AppForgotPasswordRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/login': {
+      id: '/app/login'
+      path: '/login'
+      fullPath: '/app/login'
+      preLoaderRoute: typeof AppLoginRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/reset-password': {
+      id: '/app/reset-password'
+      path: '/reset-password'
+      fullPath: '/app/reset-password'
+      preLoaderRoute: typeof AppResetPasswordRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/signup': {
+      id: '/app/signup'
+      path: '/signup'
+      fullPath: '/app/signup'
+      preLoaderRoute: typeof AppSignupRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/d/$token': {
+      id: '/d/$token'
+      path: '/d/$token'
+      fullPath: '/d/$token'
+      preLoaderRoute: typeof DTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/f/$token': {
+      id: '/f/$token'
+      path: '/f/$token'
+      fullPath: '/f/$token'
+      preLoaderRoute: typeof FTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/s/$token': {
+      id: '/s/$token'
+      path: '/s/$token'
+      fullPath: '/s/$token'
+      preLoaderRoute: typeof STokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$lang/lp/$slug': {
+      id: '/$lang/lp/$slug'
+      path: '/lp/$slug'
+      fullPath: '/$lang/lp/$slug'
+      preLoaderRoute: typeof LangLpSlugRouteImport
+      parentRoute: typeof LangRouteRoute
+    }
+    '/app/_shell/': {
+      id: '/app/_shell/'
+      path: '/'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AppShellIndexRouteImport
+      parentRoute: typeof AppShellRoute
+    }
+    '/app/_shell/$section': {
+      id: '/app/_shell/$section'
+      path: '/$section'
+      fullPath: '/app/$section'
+      preLoaderRoute: typeof AppShellSectionRouteImport
+      parentRoute: typeof AppShellRoute
+    }
+    '/app/_shell/contacts': {
+      id: '/app/_shell/contacts'
+      path: '/contacts'
+      fullPath: '/app/contacts'
+      preLoaderRoute: typeof AppShellContactsRouteImport
+      parentRoute: typeof AppShellRoute
+    }
+    '/app/_shell/forms': {
+      id: '/app/_shell/forms'
+      path: '/forms'
+      fullPath: '/app/forms'
+      preLoaderRoute: typeof AppShellFormsRouteImport
+      parentRoute: typeof AppShellRoute
+    }
+    '/app/_shell/integrations': {
+      id: '/app/_shell/integrations'
+      path: '/integrations'
+      fullPath: '/app/integrations'
+      preLoaderRoute: typeof AppShellIntegrationsRouteImport
+      parentRoute: typeof AppShellRoute
+    }
+    '/app/_shell/organization': {
+      id: '/app/_shell/organization'
+      path: '/organization'
+      fullPath: '/app/organization'
+      preLoaderRoute: typeof AppShellOrganizationRouteImport
+      parentRoute: typeof AppShellRoute
+    }
+    '/app/_shell/plan': {
+      id: '/app/_shell/plan'
+      path: '/plan'
+      fullPath: '/app/plan'
+      preLoaderRoute: typeof AppShellPlanRouteImport
+      parentRoute: typeof AppShellRoute
+    }
+    '/app/_shell/processes': {
+      id: '/app/_shell/processes'
+      path: '/processes'
+      fullPath: '/app/processes'
+      preLoaderRoute: typeof AppShellProcessesRouteImport
+      parentRoute: typeof AppShellRoute
+    }
+    '/app/_shell/reports': {
+      id: '/app/_shell/reports'
+      path: '/reports'
+      fullPath: '/app/reports'
+      preLoaderRoute: typeof AppShellReportsRouteImport
+      parentRoute: typeof AppShellRoute
+    }
+    '/app/_shell/send': {
+      id: '/app/_shell/send'
+      path: '/send'
+      fullPath: '/app/send'
+      preLoaderRoute: typeof AppShellSendRouteImport
+      parentRoute: typeof AppShellRoute
+    }
+    '/app/_shell/settings': {
+      id: '/app/_shell/settings'
+      path: '/settings'
+      fullPath: '/app/settings'
+      preLoaderRoute: typeof AppShellSettingsRouteImport
+      parentRoute: typeof AppShellRoute
+    }
+    '/app/_shell/sign': {
+      id: '/app/_shell/sign'
+      path: '/sign'
+      fullPath: '/app/sign'
+      preLoaderRoute: typeof AppShellSignRouteImport
+      parentRoute: typeof AppShellRoute
+    }
+    '/app/invite/$token': {
+      id: '/app/invite/$token'
+      path: '/invite/$token'
+      fullPath: '/app/invite/$token'
+      preLoaderRoute: typeof AppInviteTokenRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/_shell/bulk/': {
+      id: '/app/_shell/bulk/'
+      path: '/bulk'
+      fullPath: '/app/bulk/'
+      preLoaderRoute: typeof AppShellBulkIndexRouteImport
+      parentRoute: typeof AppShellRoute
+    }
+    '/app/_shell/bulk/$id': {
+      id: '/app/_shell/bulk/$id'
+      path: '/bulk/$id'
+      fullPath: '/app/bulk/$id'
+      preLoaderRoute: typeof AppShellBulkIdRouteImport
+      parentRoute: typeof AppShellRoute
+    }
+    '/app/_shell/bulk/new': {
+      id: '/app/_shell/bulk/new'
+      path: '/bulk/new'
+      fullPath: '/app/bulk/new'
+      preLoaderRoute: typeof AppShellBulkNewRouteImport
+      parentRoute: typeof AppShellRoute
+    }
+    '/app/_shell/documents/': {
+      id: '/app/_shell/documents/'
+      path: '/documents'
+      fullPath: '/app/documents/'
+      preLoaderRoute: typeof AppShellDocumentsIndexRouteImport
+      parentRoute: typeof AppShellRoute
+    }
+    '/app/_shell/documents/$id': {
+      id: '/app/_shell/documents/$id'
+      path: '/documents/$id'
+      fullPath: '/app/documents/$id'
+      preLoaderRoute: typeof AppShellDocumentsIdRouteImport
+      parentRoute: typeof AppShellRoute
+    }
+    '/app/_shell/templates/': {
+      id: '/app/_shell/templates/'
+      path: '/templates'
+      fullPath: '/app/templates/'
+      preLoaderRoute: typeof AppShellTemplatesIndexRouteImport
+      parentRoute: typeof AppShellRoute
+    }
+    '/app/_shell/templates/$id': {
+      id: '/app/_shell/templates/$id'
+      path: '/templates/$id'
+      fullPath: '/app/templates/$id'
+      preLoaderRoute: typeof AppShellTemplatesIdRouteImport
+      parentRoute: typeof AppShellRoute
+    }
+    '/app/_shell/templates/new': {
+      id: '/app/_shell/templates/new'
+      path: '/templates/new'
+      fullPath: '/app/templates/new'
+      preLoaderRoute: typeof AppShellTemplatesNewRouteImport
+      parentRoute: typeof AppShellRoute
+    }
+    '/app/_shell/templates/edit/$id': {
+      id: '/app/_shell/templates/edit/$id'
+      path: '/templates/edit/$id'
+      fullPath: '/app/templates/edit/$id'
+      preLoaderRoute: typeof AppShellTemplatesEditIdRouteImport
+      parentRoute: typeof AppShellRoute
+    }
   }
 }
 
+interface LangRouteRouteChildren {
+  LangAssinarGratisRoute: typeof LangAssinarGratisRoute
+  LangCondicoesCedroRoute: typeof LangCondicoesCedroRoute
+  LangDesenvolvedoresRoute: typeof LangDesenvolvedoresRoute
+  LangEntrarRoute: typeof LangEntrarRoute
+  LangPrivacidadeRoute: typeof LangPrivacidadeRoute
+  LangTermosRoute: typeof LangTermosRoute
+  LangTitularRoute: typeof LangTitularRoute
+  LangValidarRoute: typeof LangValidarRoute
+  LangIndexRoute: typeof LangIndexRoute
+  LangLpSlugRoute: typeof LangLpSlugRoute
+}
+
+const LangRouteRouteChildren: LangRouteRouteChildren = {
+  LangAssinarGratisRoute: LangAssinarGratisRoute,
+  LangCondicoesCedroRoute: LangCondicoesCedroRoute,
+  LangDesenvolvedoresRoute: LangDesenvolvedoresRoute,
+  LangEntrarRoute: LangEntrarRoute,
+  LangPrivacidadeRoute: LangPrivacidadeRoute,
+  LangTermosRoute: LangTermosRoute,
+  LangTitularRoute: LangTitularRoute,
+  LangValidarRoute: LangValidarRoute,
+  LangIndexRoute: LangIndexRoute,
+  LangLpSlugRoute: LangLpSlugRoute,
+}
+
+const LangRouteRouteWithChildren = LangRouteRoute._addFileChildren(
+  LangRouteRouteChildren,
+)
+
+interface AppShellRouteChildren {
+  AppShellSectionRoute: typeof AppShellSectionRoute
+  AppShellContactsRoute: typeof AppShellContactsRoute
+  AppShellFormsRoute: typeof AppShellFormsRoute
+  AppShellIntegrationsRoute: typeof AppShellIntegrationsRoute
+  AppShellOrganizationRoute: typeof AppShellOrganizationRoute
+  AppShellPlanRoute: typeof AppShellPlanRoute
+  AppShellProcessesRoute: typeof AppShellProcessesRoute
+  AppShellReportsRoute: typeof AppShellReportsRoute
+  AppShellSendRoute: typeof AppShellSendRoute
+  AppShellSettingsRoute: typeof AppShellSettingsRoute
+  AppShellSignRoute: typeof AppShellSignRoute
+  AppShellIndexRoute: typeof AppShellIndexRoute
+  AppShellBulkIdRoute: typeof AppShellBulkIdRoute
+  AppShellBulkNewRoute: typeof AppShellBulkNewRoute
+  AppShellDocumentsIdRoute: typeof AppShellDocumentsIdRoute
+  AppShellTemplatesIdRoute: typeof AppShellTemplatesIdRoute
+  AppShellTemplatesNewRoute: typeof AppShellTemplatesNewRoute
+  AppShellBulkIndexRoute: typeof AppShellBulkIndexRoute
+  AppShellDocumentsIndexRoute: typeof AppShellDocumentsIndexRoute
+  AppShellTemplatesIndexRoute: typeof AppShellTemplatesIndexRoute
+  AppShellTemplatesEditIdRoute: typeof AppShellTemplatesEditIdRoute
+}
+
+const AppShellRouteChildren: AppShellRouteChildren = {
+  AppShellSectionRoute: AppShellSectionRoute,
+  AppShellContactsRoute: AppShellContactsRoute,
+  AppShellFormsRoute: AppShellFormsRoute,
+  AppShellIntegrationsRoute: AppShellIntegrationsRoute,
+  AppShellOrganizationRoute: AppShellOrganizationRoute,
+  AppShellPlanRoute: AppShellPlanRoute,
+  AppShellProcessesRoute: AppShellProcessesRoute,
+  AppShellReportsRoute: AppShellReportsRoute,
+  AppShellSendRoute: AppShellSendRoute,
+  AppShellSettingsRoute: AppShellSettingsRoute,
+  AppShellSignRoute: AppShellSignRoute,
+  AppShellIndexRoute: AppShellIndexRoute,
+  AppShellBulkIdRoute: AppShellBulkIdRoute,
+  AppShellBulkNewRoute: AppShellBulkNewRoute,
+  AppShellDocumentsIdRoute: AppShellDocumentsIdRoute,
+  AppShellTemplatesIdRoute: AppShellTemplatesIdRoute,
+  AppShellTemplatesNewRoute: AppShellTemplatesNewRoute,
+  AppShellBulkIndexRoute: AppShellBulkIndexRoute,
+  AppShellDocumentsIndexRoute: AppShellDocumentsIndexRoute,
+  AppShellTemplatesIndexRoute: AppShellTemplatesIndexRoute,
+  AppShellTemplatesEditIdRoute: AppShellTemplatesEditIdRoute,
+}
+
+const AppShellRouteWithChildren = AppShellRoute._addFileChildren(
+  AppShellRouteChildren,
+)
+
+interface AppRouteRouteChildren {
+  AppShellRoute: typeof AppShellRouteWithChildren
+  AppForgotPasswordRoute: typeof AppForgotPasswordRoute
+  AppLoginRoute: typeof AppLoginRoute
+  AppResetPasswordRoute: typeof AppResetPasswordRoute
+  AppSignupRoute: typeof AppSignupRoute
+  AppInviteTokenRoute: typeof AppInviteTokenRoute
+}
+
+const AppRouteRouteChildren: AppRouteRouteChildren = {
+  AppShellRoute: AppShellRouteWithChildren,
+  AppForgotPasswordRoute: AppForgotPasswordRoute,
+  AppLoginRoute: AppLoginRoute,
+  AppResetPasswordRoute: AppResetPasswordRoute,
+  AppSignupRoute: AppSignupRoute,
+  AppInviteTokenRoute: AppInviteTokenRoute,
+}
+
+const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
+  AppRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  LangRouteRoute: LangRouteRouteWithChildren,
+  AppRouteRoute: AppRouteRouteWithChildren,
+  AdminRoute: AdminRoute,
+  AssinarGratisRoute: AssinarGratisRoute,
+  CondicoesCedroRoute: CondicoesCedroRoute,
+  DesenvolvedoresRoute: DesenvolvedoresRoute,
+  EntrarRoute: EntrarRoute,
+  PrivacidadeRoute: PrivacidadeRoute,
+  RobotsDottxtRoute: RobotsDottxtRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
+  TermosRoute: TermosRoute,
+  TitularRoute: TitularRoute,
+  ValidarRoute: ValidarRoute,
+  DTokenRoute: DTokenRoute,
+  FTokenRoute: FTokenRoute,
+  STokenRoute: STokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
