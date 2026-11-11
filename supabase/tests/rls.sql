@@ -981,8 +981,10 @@ reset role;
 
 -- Growth & Aquisição: primeira e última origem no cadastro; módulo só para Super Admin com MFA.
 reset role;
+-- Data de cadastro fixa (perto das origens de outubro) para o teste não depender do dia em que roda:
+-- a última origem só vale até `attribution_days` (30) antes do cadastro.
 insert into auth.users (id, email, aud, role, created_at, raw_user_meta_data) values
-  ('00000000-0000-0000-0000-0000000000d1', 'gabi@teste.mdsign', 'authenticated', 'authenticated', now(),
+  ('00000000-0000-0000-0000-0000000000d1', 'gabi@teste.mdsign', 'authenticated', 'authenticated', '2026-10-06T10:00:00Z',
    '{"full_name":"Gabi Teste","acq":{"utm_source":"instagram","utm_medium":"paid_social","utm_campaign":"lancamento_outubro","landing_page":"/pt/assinar-gratis","first_seen_at":"2026-10-01T10:00:00Z","session_id":"sessaoteste01","last":{"utm_source":"google","utm_medium":"cpc","utm_campaign":"busca_marca","landing_page":"/pt/lp/assinar-pdf-gratis","seen_at":"2026-10-05T10:00:00Z"}}}');
 update auth.users set email_confirmed_at = now() where email like '%@teste.mdsign' and email_confirmed_at is null;
 do $$ begin

@@ -23,7 +23,7 @@
 | Item | Onde |
 |---|---|
 | Repositório | GitHub `TIMundoDigital/mdsign-git-import`, branch `main` (é o que o Lovable sincroniza). `TIMundoDigital/roberta-MDSIGN` é a cópia da migração, sem ligação com o Lovable |
-| Front | Lovable, projeto `33353745-27fd-4380-8a2b-929ec05aac8b` (push na `main` sincroniza; depois, **Publish → Update** no Lovable) |
+| Front | Lovable, projeto `33353745-27fd-4380-8a2b-929ec05aac8b`, publicado em https://mdsign-new.lovable.app (push na `main` sincroniza; depois, **Publish → Update** no Lovable). O endereço antigo `mdsign.lovable.app` não é mais nosso e não deve constar em `ALLOWED_ORIGINS` nem nas URLs do Auth |
 | Supabase de **homologação** | projeto `vrksxqbopteeyeovdwpu` ("MDSign", us-east-1), transferido para a organização da MDTech em 11/11/2026 |
 | Supabase de **produção** | a criar em **sa-east-1** (São Paulo), ver `docs/migracao-sa-east-1.md` |
 | Motor | https://sign.signdocmd.com.br (SignDoc 2.9), aplicação "MDSign" |

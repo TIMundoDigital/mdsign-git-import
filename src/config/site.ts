@@ -18,7 +18,7 @@ export const siteConfig = {
    * URL pública canônica, sem barra final. Até existir o domínio de produção,
    * usa o endereço provisório publicado no Lovable.
    */
-  siteUrl: (optional(env.VITE_SITE_URL) ?? "https://mdsign.lovable.app").replace(/\/$/, ""),
+  siteUrl: (optional(env.VITE_SITE_URL) ?? "https://mdsign-new.lovable.app").replace(/\/$/, ""),
 
   /** Login do app MDSign (Fase 2): destino de "Entrar". */
   appUrl: optional(env.VITE_APP_URL) ?? "/app/login",
