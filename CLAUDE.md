@@ -143,8 +143,7 @@ Não há clientes reais: todas as contas são de teste.
 
 ## 7. Próximos passos
 
-1. **Encerrar a sobra da migração:** redefinir a senha do banco do `vrksxqbopteeyeovdwpu`.
-2. **Domínio de e-mail no Resend: `mail.mundodigitaltech.com.br`** (DNS na HostGator).
+1. **Domínio de e-mail no Resend: `mail.mundodigitaltech.com.br`** (DNS na HostGator).
    - CNAMEs `rsend.mail` e `send.mail` já estão OK.
    - Faltam os TXT do DKIM (`resend._domainkey.mail.mundodigitaltech.com.br.`, valor `p=…` do
      Resend) e do DMARC (`_dmarc.mundodigitaltech.com.br.`, `v=DMARC1; p=none;`). No cPanel,
@@ -152,15 +151,15 @@ Não há clientes reais: todas as contas são de teste.
    - Depois de "Verified": trocar a chave do Resend, definir o remetente com
      `bash scripts/resend-key.sh` (`MDSign <nao-responda@mail.mundodigitaltech.com.br>`) e testar
      um envio, conferindo "entregue/aberto" na linha do tempo.
-3. **Certificado digital: "Invalid license"** ao assinar com A3 dentro do quadro embutido.
+2. **Certificado digital: "Invalid license"** ao assinar com A3 dentro do quadro embutido.
    Hipótese: a licença do Web PKI cobre só `sign.signdocmd.com.br`. Próximo teste: assinar o mesmo
    documento direto no SignDoc. Se funcionar, pedir à Lacuna a inclusão do domínio do MDSign ou
    abrir a assinatura com certificado em nova aba; se falhar, abrir chamado na Lacuna. Até lá, o
    site diz "ICP-Brasil em breve".
-4. **ZIP em lote:** escolher o tipo de arquivo (PDF assinado ou versão para impressão). A função
+3. **ZIP em lote:** escolher o tipo de arquivo (PDF assinado ou versão para impressão). A função
    `documents-zip` já aceita `version: "printable"`; falta a escolha na tela
    (`src/routes/app/_shell/documents/index.tsx`, função `downloadSelected`).
-5. **Outras pendências:**
+4. **Outras pendências:**
    - revisão jurídica dos Termos (minutas com `LEGAL_DRAFT` em `src/content/legal.ts`) e
      indicação do DPO;
    - testar SMS, WhatsApp e selfie antes de liberar em `SIGNDOC_AUTH_METHODS`;
