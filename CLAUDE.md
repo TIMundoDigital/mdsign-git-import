@@ -35,10 +35,9 @@
   segredos cadastrados.
 - A `20261016180000_rotinas_endereco_no_cofre.sql` faz as rotinas lerem o endereço das funções do
   Vault (`mdsign_functions_url`). **Não editar migrações já aplicadas.**
-- Projeto `ymseserdiwecgaueycwi` (criado em 05/11/2026 para ser a homologação): **sem uso**. Tem a
-  estrutura e 27 funções publicadas em 11/11/2026, sem segredos e sem usuários. O ramo
-  `homologacao-supabase`, que apontava para ele, foi apagado em 11/11/2026. Falta decidir se o
-  projeto será pausado ou apagado.
+- O projeto `ymseserdiwecgaueycwi` (criado em 05/11/2026 para ser a homologação) nunca teve
+  usuários e foi **excluído em 11/11/2026**, junto com o ramo `homologacao-supabase`, que apontava
+  para ele.
 
 ### Tecnologia
 
@@ -144,8 +143,7 @@ Não há clientes reais: todas as contas são de teste.
 
 ## 7. Próximos passos
 
-1. **Encerrar a sobra da migração:** decidir o destino do projeto `ymseserdiwecgaueycwi` (pausar
-   ou apagar) e redefinir a senha do banco do `vrksxqbopteeyeovdwpu`.
+1. **Encerrar a sobra da migração:** redefinir a senha do banco do `vrksxqbopteeyeovdwpu`.
 2. **Domínio de e-mail no Resend: `mail.mundodigitaltech.com.br`** (DNS na HostGator).
    - CNAMEs `rsend.mail` e `send.mail` já estão OK.
    - Faltam os TXT do DKIM (`resend._domainkey.mail.mundodigitaltech.com.br.`, valor `p=…` do
