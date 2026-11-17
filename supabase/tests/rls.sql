@@ -1903,4 +1903,33 @@ do $$ begin
     and user_id = '00000000-0000-0000-0000-00000000007b') = 'suspended', 'Eva continua suspensa';
 end $$;
 
+-- Usuários conforme o plano: plano menor suspende os excedentes; plano maior os traz de volta.
+-- Quem foi suspenso à mão não volta sozinho.
+update public.subscriptions set plan_id = 'angico' where organization_id = (select v from t_ids where k = 'orgLim');
+do $$
+declare org uuid := (select v from t_ids where k = 'orgLim');
+begin
+  assert (select status from public.memberships where organization_id = org
+    and user_id = '00000000-0000-0000-0000-00000000007b') = 'suspended',
+    'suspensa à mão não é reativada pela troca de plano';
+  update public.memberships set status = 'active'
+    where organization_id = org and user_id = '00000000-0000-0000-0000-00000000007b';
+  -- Volta ao Cedro (1 usuário): a Eva é suspensa pelo plano; o dono fica.
+  update public.subscriptions set plan_id = 'cedro' where organization_id = org;
+  assert (select status = 'suspended' and plan_suspended_at is not null from public.memberships
+    where organization_id = org and user_id = '00000000-0000-0000-0000-00000000007b'),
+    'excedente suspenso pelo plano';
+  assert (select status from public.memberships where organization_id = org
+    and user_id = '00000000-0000-0000-0000-00000000007a') = 'active', 'o proprietário fica';
+  assert exists (select 1 from public.audit_log where organization_id = org
+    and action = 'member.suspended_by_plan'), 'registrado na auditoria';
+  -- Contrata um plano maior: a Eva volta sozinha.
+  update public.subscriptions set plan_id = 'angico' where organization_id = org;
+  assert (select status = 'active' and plan_suspended_at is null from public.memberships
+    where organization_id = org and user_id = '00000000-0000-0000-0000-00000000007b'),
+    'reativada sozinha quando o plano comporta';
+  assert exists (select 1 from public.audit_log where organization_id = org
+    and action = 'member.reactivated_by_plan'), 'reativação registrada';
+end $$;
+
 select 'todos os testes de RLS e permissões passaram' as resultado;

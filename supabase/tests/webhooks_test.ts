@@ -388,7 +388,7 @@ Deno.test("Asaas: chargeback suspende; estorno parcial não", async () => {
   }
 });
 
-Deno.test("Asaas: suspensa há mais de 30 dias volta ao Cedro e para de cobrar", async () => {
+Deno.test("Asaas: suspensa há mais de 15 dias volta ao Cedro e para de cobrar", async () => {
   const { fake, asaasCalls } = asaasScenario();
   const days = (n: number) => new Date(Date.now() - n * 86400000).toISOString();
   fake.tables["subscriptions"] = [
@@ -398,7 +398,7 @@ Deno.test("Asaas: suspensa há mais de 30 dias volta ao Cedro e para de cobrar",
       status: "suspended",
       billing_status: "overdue",
       asaas_subscription_id: "sub_antiga",
-      past_due_since: days(31),
+      past_due_since: days(16),
       cancel_at: null,
     },
     {

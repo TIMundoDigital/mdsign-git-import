@@ -329,7 +329,7 @@ export async function runBilling() {
   const days = Number(graceCfg.days ?? 7);
   // Suspensa há mais que isto (desde o atraso ou o estorno): volta ao Cedro e para de cobrar.
   // Ajustável no Super Admin → Políticas → billing_grace ("downgrade_days").
-  const downgradeDays = Number(graceCfg.downgrade_days ?? 30);
+  const downgradeDays = Number(graceCfg.downgrade_days ?? 15); // decisão de 17/11/2026
   const { data: late } = await admin
     .from("subscriptions")
     .select("organization_id")
