@@ -18,6 +18,10 @@ export type EngineState = {
 
 export type FakeBackend = {
   tables: Record<string, Row[]>;
+  /** Arquivos do Storage por bucket (caminho completo). */
+  storage: Record<string, Set<string>>;
+  /** true = a próxima exclusão de arquivos "esquece" um arquivo (para testar a conferência). */
+  storageDropOneOnRemove?: boolean;
   rpc: Record<string, Rpc>;
   engine: EngineState;
   /** Chamadas feitas à API do SignDoc ("GET /api/documents/…"). */
@@ -172,7 +176,9 @@ export function installFakeBackend(opts: {
   };
   const engine: EngineState = { documents: {}, deleted: new Set(), refusals: [] };
   const engineCalls: string[] = [];
+  const storage: Record<string, Set<string>> = {};
   const original = globalThis.fetch;
+  const backend = {} as FakeBackend;
   let seq = 1000;
 
   const table = (name: string) => (tables[name] ??= []);
@@ -323,6 +329,40 @@ export function installFakeBackend(opts: {
     const req = new Request(input, init);
     const url = new URL(req.url);
     if (url.pathname.startsWith("/rest/v1/")) return await rest(req, url);
+    const list = /^\/storage\/v1\/object\/list\/([\w-]+)$/.exec(url.pathname);
+    if (list && req.method === "POST") {
+      const {
+        prefix = "",
+        limit = 100,
+        offset = 0,
+      } = (await req.json()) as {
+        prefix?: string;
+        limit?: number;
+        offset?: number;
+      };
+      const base = prefix ? `${prefix.replace(/\/$/, "")}/` : "";
+      const children = new Map<string, boolean>(); // nome → é arquivo
+      for (const path of storage[list[1]!] ?? []) {
+        if (!path.startsWith(base)) continue;
+        const rest = path.slice(base.length);
+        const [head, ...tail] = rest.split("/");
+        if (!children.has(head!) || tail.length === 0) children.set(head!, tail.length === 0);
+      }
+      const items = [...children.entries()]
+        .sort(([a], [b]) => (a < b ? -1 : 1))
+        .slice(offset, offset + limit)
+        .map(([name, isFile]) => ({ name, id: isFile ? crypto.randomUUID() : null }));
+      return json(items);
+    }
+    const bucketDel = /^\/storage\/v1\/object\/([\w-]+)$/.exec(url.pathname);
+    if (bucketDel && req.method === "DELETE") {
+      const { prefixes = [] } = (await req.json()) as { prefixes?: string[] };
+      const set = (storage[bucketDel[1]!] ??= new Set());
+      let targets = prefixes.filter((p) => set.has(p));
+      if (backend.storageDropOneOnRemove && targets.length) targets = targets.slice(1);
+      for (const p of targets) set.delete(p);
+      return json(targets.map((name) => ({ name })));
+    }
     const adminUser = /^\/auth\/v1\/admin\/users\/([\w-]+)$/.exec(url.pathname);
     if (adminUser) {
       const user = Object.values(opts.users ?? {}).find((u) => u.id === adminUser[1]);
@@ -341,5 +381,13 @@ export function installFakeBackend(opts: {
     throw new Error(`fake_backend: requisição inesperada ${req.method} ${req.url}`);
   };
 
-  return { tables, rpc, engine, engineCalls, restore: () => (globalThis.fetch = original) };
+  Object.assign(backend, {
+    tables,
+    storage,
+    rpc,
+    engine,
+    engineCalls,
+    restore: () => (globalThis.fetch = original),
+  });
+  return backend;
 }

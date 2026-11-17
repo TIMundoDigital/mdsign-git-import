@@ -836,6 +836,28 @@ end $$;
 update public.organizations set export_until = now() - interval '1 day', purge_after = now() - interval '1 minute'
   where id = (select v from t_ids where k = 'orgD1');
 insert into public.contacts (organization_id, name, email) values ((select v from t_ids where k = 'orgD1'), 'Contato D', 'contato.d@teste.mdsign');
+-- Dados operacionais das tabelas mais novas (P1-4): também apagados no 60º dia.
+with d as (
+  insert into public.documents (organization_id, created_by, kind, name, engine_document_id)
+  values ((select v from t_ids where k = 'orgD1'), '00000000-0000-0000-0000-00000000000d', 'send',
+          'Documento D', gen_random_uuid())
+  returning id)
+insert into t_ids select 'docD1', id from d;
+with f as (
+  insert into public.document_folders (organization_id, name)
+  values ((select v from t_ids where k = 'orgD1'), 'Pasta D') returning id)
+update public.documents set folder_id = (select id from f) where id = (select v from t_ids where k = 'docD1');
+insert into public.document_shares (document_id, organization_id, email, token_hash, expires_at)
+  values ((select v from t_ids where k = 'docD1'), (select v from t_ids where k = 'orgD1'),
+          'copia.d@teste.mdsign', repeat('d', 64), now() + interval '1 day');
+insert into public.saved_flows (organization_id, name, participants)
+  values ((select v from t_ids where k = 'orgD1'), 'Fluxo D',
+          '[{"name":"Pessoa D","email":"pessoa.d@teste.mdsign","cpf":"52998224725"}]');
+insert into public.document_attachments (document_id, organization_id, name, content_type, size_bytes, storage_path)
+  values ((select v from t_ids where k = 'docD1'), (select v from t_ids where k = 'orgD1'), 'anexo.pdf',
+          'application/pdf', 10, (select v from t_ids where k = 'orgD1')::text || '/anexo-teste.pdf');
+insert into public.organization_units (organization_id, name)
+  values ((select v from t_ids where k = 'orgD1'), 'Unidade D');
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-00000000000d","role":"authenticated"}', true);
 set local role authenticated;
 do $$ begin
@@ -850,6 +872,12 @@ do $$ begin
   assert (select count(*) from public.memberships where organization_id = (select v from t_ids where k = 'orgD1')) = 0, 'membros removidos';
   assert (select purged_at is not null from public.organizations where id = (select v from t_ids where k = 'orgD1')), 'organização marcada como apagada';
   assert exists (select 1 from public.audit_log where organization_id = (select v from t_ids where k = 'orgD1') and action = 'organization.purged'), 'auditoria guardada';
+  assert not exists (select 1 from public.document_shares where organization_id = (select v from t_ids where k = 'orgD1')), 'cópias por link apagadas';
+  assert not exists (select 1 from public.saved_flows where organization_id = (select v from t_ids where k = 'orgD1')), 'fluxos salvos (com CPF) apagados';
+  assert not exists (select 1 from public.document_attachments where organization_id = (select v from t_ids where k = 'orgD1')), 'registro dos anexos apagado';
+  assert not exists (select 1 from public.document_folders where organization_id = (select v from t_ids where k = 'orgD1')), 'pastas apagadas';
+  assert not exists (select 1 from public.organization_units where organization_id = (select v from t_ids where k = 'orgD1')), 'unidades apagadas';
+  assert (select folder_id is null from public.documents where id = (select v from t_ids where k = 'docD1')), 'o documento fica, sem pasta';
 end $$;
 
 -- Onboarding: cada pessoa vê só o próprio; dono recebe o completo, convidado o curto; a detecção

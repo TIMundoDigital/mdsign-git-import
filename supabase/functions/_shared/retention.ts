@@ -15,6 +15,7 @@ const TEMPLATE_ORPHAN_DAYS = 7; // PDF de modelo nunca salvo (mesmo prazo do ras
 
 const BULK = "bulk-sources";
 const TEMPLATES = "templates";
+const ATTACHMENTS = "attachments";
 
 const ago = (ms: number) => new Date(Date.now() - ms).toISOString();
 
@@ -185,22 +186,36 @@ export async function runRetention() {
   return result;
 }
 
-/** Conta encerrada há 60 dias: apaga os arquivos da organização nos dois buckets. */
+/** Todos os arquivos sob um prefixo (subpastas incluídas), em páginas de 1.000. */
+async function listAll(bucket: string, prefix: string, depth = 0): Promise<string[]> {
+  const out: string[] = [];
+  for (let offset = 0; ; offset += 1000) {
+    const { data: items, error } = await admin.storage
+      .from(bucket)
+      .list(prefix, { limit: 1000, offset });
+    if (error) throw error;
+    for (const it of items ?? []) {
+      const path = `${prefix}/${it.name}`;
+      if (it.id) out.push(path);
+      else if (depth < 4) out.push(...(await listAll(bucket, path, depth + 1)));
+    }
+    if ((items ?? []).length < 1000) break;
+  }
+  return out;
+}
+
+/**
+ * Conta encerrada há 60 dias: apaga os arquivos da organização nos buckets do MDSign (lotes,
+ * modelos e anexos). Confere depois: se sobrou algo, lança erro e a organização fica para a
+ * próxima rodada (não é marcada como excluída com arquivo para trás).
+ */
 async function removeOrgFiles(org: string) {
   let removed = 0;
-  for (const bucket of [BULK, TEMPLATES]) {
-    const { data: items } = await admin.storage.from(bucket).list(org, { limit: 1000 });
-    const files: string[] = [];
-    for (const it of items ?? []) {
-      if (it.id) files.push(`${org}/${it.name}`);
-      else {
-        const { data: inner } = await admin.storage
-          .from(bucket)
-          .list(`${org}/${it.name}`, { limit: 1000 });
-        for (const f of inner ?? []) if (f.id) files.push(`${org}/${it.name}/${f.name}`);
-      }
-    }
+  for (const bucket of [BULK, TEMPLATES, ATTACHMENTS]) {
+    const files = await listAll(bucket, org);
     if (files.length) removed += await removeFiles(bucket, files);
+    const left = await listAll(bucket, org);
+    if (left.length) throw new Error(`purge_files_left:${bucket}:${left.length}`);
   }
   return removed;
 }
