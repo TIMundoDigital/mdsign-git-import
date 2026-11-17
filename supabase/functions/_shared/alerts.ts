@@ -16,6 +16,8 @@ export const ALERT_LABELS: Record<string, string> = {
   bulk_stuck: "Envio em massa parado há mais de 1 hora",
   document_charges_unknown: "Consumo de documento a conferir",
   documents_incomplete: "Documentos pendentes incompletos no MDSign",
+  cron_http_failed: "Rotina chamou as funções e recebeu erro na última hora",
+  reminders_stale: "Rotina de hora em hora sem terminar há mais de 2 horas",
 };
 
 /** Envia os alertas ainda não avisados. Devolve quantos alertas foram avisados. */

@@ -635,6 +635,8 @@ const es: AppMessages = {
         bulk_stuck: "Envío masivo detenido hace más de 1 hora",
         document_charges_unknown:
           "Consumo de documento por revisar (resultado incierto en el motor)",
+        cron_http_failed: "Una rutina llamó a las funciones y recibió un error en la última hora",
+        reminders_stale: "La rutina horaria no termina hace más de 2 horas",
         documents_incomplete:
           "Documentos pendientes incompletos en MDSign (participante sin vínculo con el motor, sin participantes o sin versión)",
       } as Record<string, string>,

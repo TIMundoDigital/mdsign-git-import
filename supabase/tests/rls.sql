@@ -2003,4 +2003,28 @@ do $$ begin
   end;
 end $$;
 
+-- Saúde das rotinas (A-5): rotina de hora em hora parada abre alerta; usuário não lê os registros.
+insert into public.routine_heartbeats (name, last_ok_at) values ('reminders-run', now() - interval '3 hours')
+  on conflict (name) do update set last_ok_at = excluded.last_ok_at;
+do $$ begin
+  perform public.refresh_platform_alerts();
+  assert exists (select 1 from public.platform_alerts where kind = 'reminders_stale' and resolved_at is null),
+    'rotina parada há 3 horas abre alerta';
+  update public.routine_heartbeats set last_ok_at = now() where name = 'reminders-run';
+  perform public.refresh_platform_alerts();
+  assert not exists (select 1 from public.platform_alerts where kind = 'reminders_stale' and resolved_at is null),
+    'alerta fecha quando a rotina volta';
+  assert exists (select 1 from cron.job where jobname = 'mdsign-alerts-refresh'), 'alertas recalculados pelo banco';
+end $$;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-00000000000a","role":"authenticated"}', true);
+set local role authenticated;
+do $$ begin
+  begin
+    perform 1 from public.routine_heartbeats;
+    raise exception 'FALHOU: usuário leu os registros das rotinas';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+reset role;
+
 select 'todos os testes de RLS e permissões passaram' as resultado;

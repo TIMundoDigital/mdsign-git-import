@@ -620,6 +620,8 @@ const en: AppMessages = {
         data_requests_overdue: "Overdue data subject requests",
         bulk_stuck: "Bulk send stalled for over 1 hour",
         document_charges_unknown: "Document usage to review (uncertain result in the engine)",
+        cron_http_failed: "A scheduled job called the functions and got an error in the last hour",
+        reminders_stale: "Hourly job has not finished for over 2 hours",
         documents_incomplete:
           "Pending documents incomplete in MDSign (participant not linked to the engine, no participants or no version)",
       } as Record<string, string>,

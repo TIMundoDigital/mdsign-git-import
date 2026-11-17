@@ -645,6 +645,8 @@ const pt = {
         data_requests_overdue: "Pedidos de titulares vencidos",
         bulk_stuck: "Envio em massa parado há mais de 1 hora",
         document_charges_unknown: "Consumo de documento a conferir (resultado incerto no motor)",
+        cron_http_failed: "Rotina chamou as funções e recebeu erro na última hora",
+        reminders_stale: "Rotina de hora em hora sem terminar há mais de 2 horas",
         documents_incomplete:
           "Documentos pendentes incompletos no MDSign (participante sem vínculo com o motor, sem participantes ou sem versão)",
       } as Record<string, string>,

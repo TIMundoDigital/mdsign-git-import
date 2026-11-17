@@ -156,6 +156,14 @@ Deno.serve(async (req) => {
   } catch (e) {
     console.error("growth", e);
   }
+  // Terminou: registra para o alerta "rotina de hora em hora parada" (reminders_stale).
+  await admin
+    .from("routine_heartbeats")
+    .upsert({ name: "reminders-run", last_ok_at: new Date().toISOString(), detail: { sent } })
+    .then(
+      () => undefined,
+      () => undefined,
+    );
   return new Response(
     JSON.stringify({ sent, bulk, retention, billing, growth, reconciled, alerts }),
     {
