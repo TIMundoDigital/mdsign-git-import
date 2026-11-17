@@ -3,6 +3,7 @@
 // com espera crescente até 8 tentativas.
 
 import { admin } from "./auth.ts";
+import { isPublicHost } from "./ssrf.ts";
 
 const BACKOFF_MIN = [1, 5, 15, 60, 180, 360, 720, 1440];
 const TIMEOUT_MS = 10_000;
@@ -43,6 +44,8 @@ export async function deliver(d: Due) {
   let status = 0;
   let error: string | null = null;
   if (!ep?.active) error = "endpoint_inactive";
+  // Conferido de novo a cada entrega: o nome pode passar a apontar para um endereço interno.
+  else if (!(await isPublicHost(new URL(ep.url).hostname))) error = "blocked_address";
   else {
     const body = JSON.stringify(d.payload);
     const ts = Math.floor(Date.now() / 1000);

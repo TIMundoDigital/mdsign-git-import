@@ -144,3 +144,46 @@ Deno.test("edição: ninguém entra duas vezes no documento", () => {
     [],
   );
 });
+
+// ---------- Webhooks só para endereços públicos (P1-12) ----------
+import { isPrivateIp, isPublicHost } from "../functions/_shared/ssrf.ts";
+
+Deno.test("webhooks: IPs privados, internos e reservados são recusados", () => {
+  for (const ip of [
+    "10.1.2.3",
+    "127.0.0.1",
+    "169.254.169.254",
+    "172.20.0.5",
+    "192.168.0.10",
+    "100.64.1.1",
+    "0.0.0.0",
+    "::1",
+    "fd00::1",
+    "fe80::1",
+    "::ffff:10.0.0.1",
+  ])
+    assertEquals(isPrivateIp(ip), true, ip);
+  for (const ip of ["8.8.8.8", "172.32.0.1", "2001:4860:4860::8888"])
+    assertEquals(isPrivateIp(ip), false, ip);
+});
+
+Deno.test("webhooks: nome que aponta para endereço interno é recusado", async () => {
+  const dns = (map: Record<string, string[]>) => (host: string, type: "A" | "AAAA") =>
+    map[`${host}/${type}`]
+      ? Promise.resolve(map[`${host}/${type}`]!)
+      : Promise.reject(new Error("NotFound"));
+  const resolver = dns({
+    "cliente.com.br/A": ["200.160.2.3"],
+    "armadilha.com/A": ["169.254.169.254"],
+    "misto.com/A": ["200.160.2.3"],
+    "misto.com/AAAA": ["fd00::5"],
+  });
+  assertEquals(await isPublicHost("cliente.com.br", resolver), true);
+  assertEquals(await isPublicHost("armadilha.com", resolver), false, "metadados da nuvem");
+  assertEquals(await isPublicHost("misto.com", resolver), false, "basta um IP interno");
+  assertEquals(await isPublicHost("localhost", resolver), false);
+  assertEquals(await isPublicHost("servidor.internal", resolver), false);
+  assertEquals(await isPublicHost("10.0.0.7", resolver), false, "IP escrito direto");
+  // DNS indisponível no ambiente: vale a checagem pelo texto (não bloqueia tudo).
+  assertEquals(await isPublicHost("cliente.com.br", null), true);
+});

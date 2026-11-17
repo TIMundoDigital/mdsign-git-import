@@ -4,6 +4,7 @@
 import { admin, requirePermission, requireUser } from "../_shared/auth.ts";
 import { AppError, corsHeaders, handleError, json } from "../_shared/http.ts";
 import { sha256Hex } from "../_shared/pdf.ts";
+import { isPublicHost } from "../_shared/ssrf.ts";
 import { deliver, newSecret } from "../_shared/webhooks.ts";
 
 export const WEBHOOK_EVENTS = [
@@ -23,7 +24,7 @@ export const WEBHOOK_EVENTS = [
 
 const hex = (bytes: Uint8Array) => [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
 
-function cleanUrl(raw: unknown) {
+async function cleanUrl(raw: unknown) {
   const url = String(raw ?? "").trim();
   let parsed: URL;
   try {
@@ -31,16 +32,8 @@ function cleanUrl(raw: unknown) {
   } catch {
     throw new AppError("invalid_webhook_url");
   }
-  // Só HTTPS público: nada de endereços internos.
-  const host = parsed.hostname;
-  if (
-    parsed.protocol !== "https:" ||
-    url.length > 500 ||
-    /^(localhost|127\.|10\.|192\.168\.|169\.254\.|0\.|\[?::1\]?$)/.test(host) ||
-    /^172\.(1[6-9]|2\d|3[01])\./.test(host) ||
-    host.endsWith(".local") ||
-    host.endsWith(".internal")
-  )
+  // Só HTTPS público: nada de endereços internos, nem por nome que aponte para eles.
+  if (parsed.protocol !== "https:" || url.length > 500 || !(await isPublicHost(parsed.hostname)))
     throw new AppError("invalid_webhook_url");
   return url;
 }
@@ -140,7 +133,7 @@ Deno.serve(async (req) => {
         .from("webhook_endpoints")
         .insert({
           organization_id: organizationId,
-          url: cleanUrl(body["url"]),
+          url: await cleanUrl(body["url"]),
           description:
             String(body["description"] ?? "")
               .trim()
@@ -171,7 +164,7 @@ Deno.serve(async (req) => {
     if (action === "update-endpoint") {
       if (!ep) throw new AppError("not_found", 404);
       const patch: Record<string, unknown> = {};
-      if (body["url"] !== undefined) patch["url"] = cleanUrl(body["url"]);
+      if (body["url"] !== undefined) patch["url"] = await cleanUrl(body["url"]);
       if (body["events"] !== undefined) patch["events"] = cleanEvents(body["events"]);
       if (body["active"] !== undefined) patch["active"] = Boolean(body["active"]);
       if (body["description"] !== undefined)
