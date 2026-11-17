@@ -212,7 +212,8 @@ Deno.serve(async (req) => {
           message,
           link: `${siteUrl()}/d/${token}`,
           days,
-          validateUrl: `${siteUrl()}/pt/validar`,
+          // Página de validação no idioma do e-mail (antes era sempre /pt).
+          validateUrl: `${siteUrl()}/${["pt", "en", "es"].includes(org?.locale ?? "") ? org!.locale : "pt"}/validar`,
         });
         await sendEmail({ to: email, ...mail, idempotencyKey: `share:${token}` });
         sent.push(email);

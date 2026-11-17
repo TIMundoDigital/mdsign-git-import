@@ -3,6 +3,7 @@
 
 import { admin } from "./auth.ts";
 import { syncDocument } from "./documents.ts";
+import { maskPersonal } from "./net.ts";
 
 const BACKOFF_MIN = [1, 5, 30, 120, 720];
 export const MAX_ATTEMPTS = BACKOFF_MIN.length;
@@ -38,12 +39,12 @@ export async function processEngineEvent(row: EventRow) {
   } catch (e) {
     const attempts = row.attempts + 1;
     const wait = BACKOFF_MIN[Math.min(attempts, BACKOFF_MIN.length) - 1]!;
-    console.error("engine event", row.type, attempts, String(e).slice(0, 200));
+    console.error("engine event", row.type, attempts, maskPersonal(String(e)).slice(0, 200));
     await admin
       .from("engine_webhook_events")
       .update({
         attempts,
-        error: String(e).slice(0, 500),
+        error: maskPersonal(String(e)).slice(0, 500),
         next_attempt_at: new Date(Date.now() + wait * 60_000).toISOString(),
       })
       .eq("id", row.id);

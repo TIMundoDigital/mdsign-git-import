@@ -1987,4 +1987,20 @@ do $$ begin
 end $$;
 reset role;
 
+-- Linha do tempo e versões: nem o servidor apaga (B-5).
+do $$ begin
+  assert exists (select 1 from public.document_events), 'há eventos para testar';
+  begin
+    delete from public.document_events where id = (select id from public.document_events limit 1);
+    raise exception 'FALHOU: evento da linha do tempo apagado';
+  exception when insufficient_privilege then null;
+  end;
+  assert exists (select 1 from public.document_versions), 'há versões para testar';
+  begin
+    delete from public.document_versions where id = (select id from public.document_versions limit 1);
+    raise exception 'FALHOU: versão apagada';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+
 select 'todos os testes de RLS e permissões passaram' as resultado;

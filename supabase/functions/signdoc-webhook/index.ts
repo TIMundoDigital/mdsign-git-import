@@ -3,15 +3,9 @@
 
 import { admin } from "../_shared/auth.ts";
 import { processEngineEvent } from "../_shared/engine-events.ts";
+import { safeEqual } from "../_shared/net.ts";
 
 const TOKEN = Deno.env.get("SIGNDOC_WEBHOOK_TOKEN") ?? "";
-
-function safeEqual(a: string, b: string) {
-  if (a.length !== b.length || !a) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return diff === 0;
-}
 
 type Payload = {
   type?: string;

@@ -3,6 +3,7 @@
 // Grava a situação na notificação e um evento na linha do tempo (1ª entrega/abertura só).
 
 import { admin } from "../_shared/auth.ts";
+import { safeEqual } from "../_shared/net.ts";
 
 const SECRET = (Deno.env.get("RESEND_WEBHOOK_SECRET") ?? "").trim();
 const TOLERANCE_S = 5 * 60;
@@ -38,7 +39,7 @@ export async function validSignature(
   return header
     .split(" ")
     .map((part) => part.split(",")[1] ?? "")
-    .some((sig) => sig.length === expected.length && sig === expected);
+    .some((sig) => safeEqual(sig, expected));
 }
 
 type ResendEvent = { type?: string; created_at?: string; data?: { email_id?: string } };
@@ -89,11 +90,13 @@ Deno.serve(async (req) => {
     });
 
   if (ev.type === "email.delivered" && !n.delivered_at) {
+    // "Entregue" que chega depois de "devolvido" (fora de ordem) não desfaz a falha.
     const { data: changed } = await admin
       .from("notifications")
       .update({ status: "delivered", delivered_at: when })
       .eq("id", n.id)
       .is("delivered_at", null)
+      .neq("status", "failed")
       .select("id");
     if (changed?.length) await event("notification.delivered");
   } else if ((ev.type === "email.opened" || ev.type === "email.clicked") && !n.opened_at) {
@@ -105,11 +108,14 @@ Deno.serve(async (req) => {
       .select("id");
     if (changed?.length) await event("participant.email_opened");
   } else if (ev.type === "email.bounced" || ev.type === "email.complained") {
-    await admin
+    // Aviso repetido (o Resend reenvia) não duplica a linha do tempo.
+    const { data: changed } = await admin
       .from("notifications")
       .update({ status: "failed", error: ev.type === "email.bounced" ? "bounced" : "complained" })
-      .eq("id", n.id);
-    await event("notification.failed");
+      .eq("id", n.id)
+      .neq("status", "failed")
+      .select("id");
+    if (changed?.length) await event("notification.failed");
   }
   return Response.json({ ok: true });
 });

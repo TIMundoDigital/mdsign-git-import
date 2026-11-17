@@ -6,13 +6,7 @@
 import { asaasEnv, webhookToken } from "../_shared/asaas.ts";
 import { admin } from "../_shared/auth.ts";
 import { processBillingEvent } from "../_shared/billing.ts";
-
-function safeEqual(a: string, b: string) {
-  if (a.length !== b.length || !a) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return diff === 0;
-}
+import { maskPersonal, safeEqual } from "../_shared/net.ts";
 
 const pick = (o: unknown, keys: string[]) =>
   o && typeof o === "object"
@@ -92,7 +86,7 @@ Deno.serve(async (req) => {
     console.error("asaas event", id, event, e);
     await admin
       .from("billing_events")
-      .update({ attempts: 1, error: String(e).slice(0, 300) })
+      .update({ attempts: 1, error: maskPersonal(String(e)).slice(0, 300) })
       .eq("id", id);
   }
   return Response.json({ ok: true });

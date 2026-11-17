@@ -12,6 +12,7 @@ import {
   type PdfBulkMark,
   type PdfItemData,
 } from "../_shared/bulk.ts";
+import { assertOneSignature } from "../_shared/pdf.ts";
 import { admin } from "../_shared/auth.ts";
 import { createDocument } from "../_shared/create.ts";
 import { removeBulkFolder } from "../_shared/retention.ts";
@@ -31,7 +32,7 @@ const FOLDER = /^([0-9a-f-]{36})\/[0-9a-f-]{36}$/;
 function cleanMarks(raw: unknown): PdfBulkMark[] {
   if (!Array.isArray(raw)) return [];
   const clamp = (v: unknown) => Math.min(Math.max(Number(v) || 0, 0), 1);
-  return raw
+  const marks = raw
     .slice(0, 10)
     .map((m) => {
       const x = clamp(m?.x);
@@ -47,6 +48,10 @@ function cleanMarks(raw: unknown): PdfBulkMark[] {
       } as PdfBulkMark;
     })
     .filter((m) => m.w > 0.01 && m.h > 0.01);
+  // Uma assinatura por pessoa (o SignDoc recusa mais de uma): recusado já na criação do lote,
+  // em vez de todos os itens falharem depois (auditoria D-19).
+  assertOneSignature(marks);
+  return marks;
 }
 
 Deno.serve(async (req) => {

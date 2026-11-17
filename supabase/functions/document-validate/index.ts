@@ -28,8 +28,9 @@ Deno.serve(async (req) => {
       throw new AppError("origin_not_allowed", 403);
 
     const ip = (req.headers.get("x-forwarded-for") ?? "").split(",")[0]!.trim();
-    const ipHash = ip ? await hashToken(ip) : null;
-    if (ipHash) {
+    // Sem IP informado, as tentativas dividem um mesmo limite (antes ficavam sem limite).
+    const ipHash = await hashToken(ip || "sem-ip");
+    {
       const since = new Date(Date.now() - WINDOW_MINUTES * 60_000).toISOString();
       const { count } = await admin
         .from("validation_attempts")

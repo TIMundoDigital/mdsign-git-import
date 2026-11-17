@@ -2,15 +2,9 @@
 // Autenticado pelo cabeçalho x-mdsign-whatsapp-secret (sem token na URL).
 
 import { optOut } from "../_shared/notifications.ts";
+import { safeEqual } from "../_shared/net.ts";
 
 const SECRET = Deno.env.get("WHATSAPP_WEBHOOK_SECRET") ?? "";
-
-function safeEqual(a: string, b: string) {
-  if (a.length !== b.length || !a) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return diff === 0;
-}
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response(null, { status: 405 });
