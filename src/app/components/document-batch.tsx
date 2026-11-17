@@ -134,6 +134,11 @@ export function ReasonDialog({
   const { t, f } = useAppI18n();
   const b = t.documents.batch;
   const [reason, setReason] = useState("");
+  // Recusa em lote: devolver para correção (padrão) ou rejeitar definitivamente, como na
+  // recusa de um documento só (antes o lote nunca permitia rejeitar).
+  const [kind, setKind] = useState<"return" | "reject">("return");
+  const [sure, setSure] = useState(false);
+  const d = t.documents.decision;
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
   // Cancelar aceita sem motivo (o MDSign registra um padrão); rejeitar exige motivo.
@@ -142,13 +147,16 @@ export function ReasonDialog({
   async function run() {
     setBusy(true);
     let ok = 0;
-    for (const [i, d] of docs.entries()) {
+    for (const [i, doc] of docs.entries()) {
       setProgress(i + 1);
       try {
-        await documentAction(d.id, mode, { reason: reason.trim() });
+        await documentAction(doc.id, mode, {
+          reason: reason.trim(),
+          ...(mode === "refuse" ? { kind } : {}),
+        });
         ok++;
       } catch (e) {
-        toast.error(`${d.name}: ${errorText(t, e)}`);
+        toast.error(`${doc.name}: ${errorText(t, e)}`);
       }
     }
     setBusy(false);
@@ -174,6 +182,32 @@ export function ReasonDialog({
             ))}
           </ul>
         )}
+        {mode === "refuse" && (
+          <fieldset className="grid gap-1.5 text-sm" disabled={busy}>
+            {(["return", "reject"] as const).map((k) => (
+              <label key={k} className="flex items-start gap-2">
+                <input
+                  type="radio"
+                  name="batch-refusal-kind"
+                  checked={kind === k}
+                  onChange={() => {
+                    setKind(k);
+                    setSure(false);
+                  }}
+                  className="mt-0.5 size-4 accent-[var(--color-brand)]"
+                />
+                <span>
+                  <span className="font-medium">
+                    {k === "reject" ? d.rejectTitle : d.returnTitle}
+                  </span>
+                  <span className="block text-muted-foreground">
+                    {k === "reject" ? d.rejectHint : d.returnHint}
+                  </span>
+                </span>
+              </label>
+            ))}
+          </fieldset>
+        )}
         <label className="grid gap-1.5 text-sm">
           <span className="font-medium">{mode === "refuse" ? b.reason : b.cancelReason}</span>
           <Textarea
@@ -184,6 +218,18 @@ export function ReasonDialog({
             disabled={busy}
           />
         </label>
+        {mode === "refuse" && kind === "reject" && (
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={sure}
+              disabled={busy}
+              onChange={(e) => setSure(e.target.checked)}
+              className="mt-0.5 size-4 accent-[var(--color-destructive)]"
+            />
+            {d.rejectConfirm}
+          </label>
+        )}
         {busy && (
           <p className="flex items-center gap-2 text-sm text-muted-foreground" role="status">
             <Loader2 className="size-4 animate-spin" aria-hidden />
@@ -197,7 +243,11 @@ export function ReasonDialog({
           <Button
             variant="destructive"
             onClick={() => void run()}
-            disabled={busy || reason.trim().length < minReason}
+            disabled={
+              busy ||
+              reason.trim().length < minReason ||
+              (mode === "refuse" && kind === "reject" && !sure)
+            }
           >
             {busy && <Loader2 className="animate-spin" aria-hidden />}
             {mode === "refuse" ? b.refuseConfirm : f(b.cancelConfirm, { n: String(docs.length) })}

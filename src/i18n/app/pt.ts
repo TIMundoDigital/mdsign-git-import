@@ -1346,6 +1346,9 @@ const pt = {
     document_not_concluded: "Este documento ainda não foi concluído.",
     invalid_emails: "Confira os e-mails: até 10, no formato nome@dominio.com.",
     nothing_to_refuse: "Não é a sua vez neste documento.",
+    nothing_to_sign: "Você não tem assinatura ou aprovação pendente neste documento.",
+    not_your_turn:
+      "A sua vez neste documento ainda não chegou: ele segue a ordem definida por quem enviou. Você será avisado quando chegar a sua vez.",
     document_delete_concluded: "Documentos concluídos não podem ser excluídos.",
     document_delete_pending: "Cancele o documento antes de excluí-lo.",
     billing_customer_data_required: "Faltam os dados de cobrança para pagar com cartão.",

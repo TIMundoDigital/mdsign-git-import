@@ -19,16 +19,16 @@ function eventIds(payload: Record<string, unknown>) {
 /** Processa um evento; em erro, agenda a próxima tentativa (até 5). */
 export async function processEngineEvent(row: EventRow) {
   try {
-    if (row.type !== "DocumentsDeleted" && row.type !== "DocumentDeleted") {
-      for (const engineId of eventIds(row.payload)) {
-        const { data: doc } = await admin
-          .from("documents")
-          .select("id, organization_id, status, engine_document_id")
-          .eq("engine_document_id", engineId)
-          .maybeSingle();
-        // Documento de fora do MDSign (ex.: criado no painel): só registra.
-        if (doc) await syncDocument(doc);
-      }
+    // Exclusão no painel do motor também sincroniza: syncDocument recebe "DocumentIsDeleted" e
+    // marca o pendente como cancelado na hora (antes esperava a reconciliação diária).
+    for (const engineId of eventIds(row.payload)) {
+      const { data: doc } = await admin
+        .from("documents")
+        .select("id, organization_id, status, engine_document_id")
+        .eq("engine_document_id", engineId)
+        .maybeSingle();
+      // Documento de fora do MDSign (ex.: criado no painel): só registra.
+      if (doc) await syncDocument(doc);
     }
     await admin
       .from("engine_webhook_events")

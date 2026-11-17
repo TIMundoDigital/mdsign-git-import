@@ -246,3 +246,25 @@ Deno.test("webhook do motor: token, registro e aviso repetido", async () => {
     fake.restore();
   }
 });
+
+Deno.test("evento do motor: exclusão no painel cancela o pendente na hora", async () => {
+  const fake = scenario();
+  fake.engine.deleted.add(ENGINE_ID);
+  fake.tables["engine_webhook_events"] = [
+    { id: 9, type: "DocumentsDeleted", attempts: 0, processed_at: null },
+  ];
+  try {
+    assert(
+      await processEngineEvent({
+        id: 9,
+        type: "DocumentsDeleted",
+        attempts: 0,
+        payload: { data: { documents: [{ id: ENGINE_ID }] } },
+      }),
+    );
+    assertEquals(fake.tables["documents"]![0]!["status"], "canceled");
+    assertEquals(events(fake), ["document.canceled"]);
+  } finally {
+    fake.restore();
+  }
+});

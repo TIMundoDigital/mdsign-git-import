@@ -1320,6 +1320,9 @@ const en: AppMessages = {
     document_not_concluded: "This document isn't completed yet.",
     invalid_emails: "Check the emails: up to 10, formatted as name@domain.com.",
     nothing_to_refuse: "It is not your turn on this document.",
+    nothing_to_sign: "You have no pending signature or approval on this document.",
+    not_your_turn:
+      "Your turn on this document has not come yet: it follows the order set by the sender. You will be notified when it is your turn.",
     document_delete_concluded: "Completed documents cannot be deleted.",
     document_delete_pending: "Cancel the document before deleting it.",
     billing_customer_data_required: "Billing details are needed to pay by card.",

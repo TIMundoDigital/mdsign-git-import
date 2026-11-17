@@ -126,6 +126,8 @@ Deno.serve(async (req) => {
           (p) => p.user_id === caller.user.id || (email && p.email.toLowerCase() === email),
         );
         if (!me) throw new AppError("nothing_to_sign", 409);
+        // Fluxo em ordem: a pessoa está no documento, mas a vez dela ainda não chegou.
+        if (me.status === "created") throw new AppError("not_your_turn", 409);
         const action = await signdoc.actionUrl(doc.engine_document_id, {
           emailAddress: me.email,
           ...(me.cpf ? { identifier: me.cpf } : {}),

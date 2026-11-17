@@ -169,3 +169,22 @@ Deno.test("recusa: só quem está com a vez, com motivo e logado", async () => {
     fake.restore();
   }
 });
+
+Deno.test("assinar: quem ainda não tem a vez recebe aviso claro, sem chamar o motor", async () => {
+  const fake = scenario();
+  fake.tables["document_participants"]![0]!["status"] = "created";
+  try {
+    const r = await action(
+      new Request("http://local/documents-action", {
+        method: "POST",
+        headers: { authorization: "Bearer token-bia", "content-type": "application/json" },
+        body: JSON.stringify({ documentId: "doc-r", action: "sign-url" }),
+      }),
+    );
+    assertEquals(r.status, 409);
+    assertEquals((await r.json()).error, "not_your_turn");
+    assert(!fake.engineCalls.some((c) => c.includes("action-url")), "o motor não é chamado");
+  } finally {
+    fake.restore();
+  }
+});

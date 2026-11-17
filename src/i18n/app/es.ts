@@ -1339,6 +1339,9 @@ const es: AppMessages = {
     document_not_concluded: "Este documento aún no está concluido.",
     invalid_emails: "Revise los correos: hasta 10, con el formato nombre@dominio.com.",
     nothing_to_refuse: "No es tu turno en este documento.",
+    nothing_to_sign: "No tienes firma ni aprobación pendiente en este documento.",
+    not_your_turn:
+      "Tu turno en este documento aún no ha llegado: sigue el orden definido por quien lo envió. Recibirás un aviso cuando sea tu turno.",
     document_delete_concluded: "Los documentos concluidos no se pueden eliminar.",
     document_delete_pending: "Cancela el documento antes de eliminarlo.",
     billing_customer_data_required: "Faltan los datos de facturación para pagar con tarjeta.",

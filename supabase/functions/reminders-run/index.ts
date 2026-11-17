@@ -30,11 +30,18 @@ Deno.serve(async (req) => {
     )
     .eq("status", "pending")
     .eq("reminders_enabled", true)
+    // Revezamento: os menos conferidos primeiro (com mais de 200 pendentes, todos chegam a vez).
+    .order("reminders_checked_at", { ascending: true, nullsFirst: true })
+    .order("created_at", { ascending: true })
     .limit(200);
 
   let sent = 0;
   const now = Date.now();
   for (const doc of docs ?? []) {
+    await admin
+      .from("documents")
+      .update({ reminders_checked_at: new Date().toISOString() })
+      .eq("id", doc.id);
     // Confirma o estado atual antes de lembrar (alguém pode ter acabado de assinar).
     try {
       const { status } = await syncDocument(doc);
@@ -63,7 +70,9 @@ Deno.serve(async (req) => {
             last_reminded_at: new Date().toISOString(),
             reminder_count: p.reminder_count + 1,
           })
-          .eq("id", p.id);
+          .eq("id", p.id)
+          // Só conta se ninguém contou antes (lembrete manual ao mesmo tempo).
+          .eq("reminder_count", p.reminder_count);
         await admin.from("document_events").insert({
           document_id: doc.id,
           organization_id: doc.organization_id,
