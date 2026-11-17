@@ -2,8 +2,10 @@
 // modelos, formulários e envio em massa: uma única regra de criação.
 
 import { admin } from "./auth.ts";
+import { linkParticipants } from "./engine-link.ts";
 import { assertFeature } from "./features.ts";
 import { AppError } from "./http.ts";
+import { maskPersonal } from "./net.ts";
 import { enqueueChannels, ownEmailFor } from "./notifications.ts";
 import {
   toFlowActions,
@@ -208,6 +210,35 @@ async function assertQuorumAllowed(userId: string | null) {
   throw new AppError("quorum_disabled", 403);
 }
 
+/**
+ * Grava linhas que acompanham um documento já criado no motor. Confere o erro, tenta mais uma
+ * vez e, se ainda falhar, registra no log (sem dados pessoais) em vez de interromper: o documento
+ * já existe e foi contado, e o alerta "documents_incomplete" do Super Admin o aponta para
+ * conferência. Devolve as linhas gravadas (quando `columns` é informado).
+ */
+export async function insertOrReport(
+  table: "document_versions" | "document_participants",
+  rows: Record<string, unknown> | Record<string, unknown>[],
+  columns?: string,
+): Promise<Record<string, unknown>[]> {
+  let lastError: { code?: string; message?: string } | null = null;
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    const query = admin.from(table).insert(rows);
+    const { data, error } = columns ? await query.select(columns) : await query;
+    if (!error) return (data as Record<string, unknown>[] | null) ?? [];
+    lastError = error;
+    // Chave duplicada: a primeira tentativa gravou (resposta perdida); não repete.
+    if (error.code === "23505") break;
+  }
+  console.error(
+    "insert_failed",
+    table,
+    lastError?.code ?? "",
+    maskPersonal(lastError?.message ?? ""),
+  );
+  return [];
+}
+
 /** Pessoas de uma regra no motor (o campo antigo signRuleUsers ainda pode vir preenchido). */
 export function ruleMembers(a: EngineFlowAction) {
   return a.ruleUsers ?? a.signRuleUsers ?? [];
@@ -396,8 +427,11 @@ export async function createDocument(input: CreateInput): Promise<Created> {
       doc: doc.id,
       engine: created.documentId,
     });
+    // Daqui em diante o documento existe no motor e no MDSign: uma falha de gravação não pode
+    // passar em silêncio. Tenta de novo uma vez; se persistir, fica registrada e o alerta
+    // "documents_incomplete" do Super Admin aponta o documento.
     // Versão 1, com o hash do arquivo enviado (correções viram versão 2, 3…).
-    await admin.from("document_versions").insert({
+    await insertOrReport("document_versions", {
       document_id: doc.id,
       organization_id: input.organizationId,
       number: 1,
@@ -408,25 +442,12 @@ export async function createDocument(input: CreateInput): Promise<Created> {
       created_by_name: input.actorName.slice(0, 160) || null,
     });
 
-    // Liga cada participante à ação do motor (mesma ordem de envio) e à conta MDSign, se houver.
-    const actions = [...(engine.flowActions ?? [])];
+    // Liga cada participante à ação do motor (e-mail, CPF ou posição na etapa) e à conta MDSign.
+    const links = linkParticipants(input.participants, engine.flowActions ?? []);
     const rows = [];
     for (const [i, p] of input.participants.entries()) {
       const d = delegated.info[i];
-      // Regra (quórum): todos os membros apontam para a mesma ação do motor.
-      const action = p.rule
-        ? actions.find(
-            (a) =>
-              (a.type === "SignRule" || a.type === "ApproverRule") &&
-              a.step === p.step &&
-              ruleMembers(a).some((u) => (u.email ?? "").toLowerCase() === p.email),
-          )
-        : (() => {
-            const idx = actions.findIndex(
-              (a) => a.step === p.step && (a.user?.email ?? "").toLowerCase() === p.email,
-            );
-            return idx >= 0 ? actions.splice(idx, 1)[0] : undefined;
-          })();
+      const action = links[i];
       const { data: userId } = await admin.rpc("user_id_by_email", { target: p.email });
       rows.push({
         document_id: doc.id,
@@ -454,10 +475,7 @@ export async function createDocument(input: CreateInput): Promise<Created> {
           : {}),
       });
     }
-    const { data: inserted } = await admin
-      .from("document_participants")
-      .insert(rows)
-      .select("id, status");
+    const inserted = await insertOrReport("document_participants", rows, "id, status");
     // Convite pelos canais do MDSign (e-mail próprio e WhatsApp) para quem já está com a vez.
     if (input.kind === "send" && input.notify)
       await enqueueChannels(

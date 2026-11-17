@@ -3,6 +3,7 @@
 import { admin } from "./auth.ts";
 import { AppError } from "./http.ts";
 import { mapDocumentStatus, signdoc, type EngineDocument } from "./signdoc.ts";
+import { linkParticipants } from "./engine-link.ts";
 import { enqueueChannels } from "./notifications.ts";
 import { deliverDue } from "./webhooks.ts";
 
@@ -11,9 +12,48 @@ type ParticipantRow = {
   id: string;
   name: string;
   email: string;
+  cpf: string | null;
+  step: number;
+  role: string;
+  rule_key: string | null;
+  rule_name: string | null;
   status: string;
   engine_flow_action_id: string | null;
 };
+
+/**
+ * Participantes sem vínculo com o motor (gravados antes da ligação por CPF ou com o e-mail trocado
+ * pelo motor): tenta religar com a mesma regra da criação. Quem continuar sem vínculo aparece no
+ * alerta "documents_incomplete" do Super Admin.
+ */
+export async function relinkParticipants(rows: ParticipantRow[], current: EngineDocument) {
+  const loose = rows.filter((r) => !r.engine_flow_action_id);
+  if (!loose.length) return;
+  const taken = rows
+    .filter((r) => r.engine_flow_action_id && !r.rule_key)
+    .map((r) => r.engine_flow_action_id as string);
+  const links = linkParticipants(
+    loose.map((r) => ({
+      email: r.email,
+      cpf: r.cpf,
+      step: r.step,
+      role: r.role,
+      rule: r.rule_key ? { key: r.rule_key, name: r.rule_name } : null,
+    })),
+    current.flowActions ?? [],
+    taken,
+  );
+  for (const [i, row] of loose.entries()) {
+    const action = links[i];
+    if (!action) continue;
+    const { error } = await admin
+      .from("document_participants")
+      .update({ engine_flow_action_id: action.id })
+      .eq("id", row.id)
+      .is("engine_flow_action_id", null);
+    if (!error) row.engine_flow_action_id = action.id;
+  }
+}
 
 const participantStatus = (s: string) =>
   s === "Completed"
@@ -67,8 +107,9 @@ export async function syncDocument(doc: DocRow, engine?: EngineDocument) {
   }
   const { data: participants } = await admin
     .from("document_participants")
-    .select("id, name, email, status, engine_flow_action_id")
+    .select("id, name, email, cpf, step, role, rule_key, rule_name, status, engine_flow_action_id")
     .eq("document_id", doc.id);
+  await relinkParticipants((participants as ParticipantRow[] | null) ?? [], current);
 
   const events: {
     type: string;
@@ -94,7 +135,10 @@ export async function syncDocument(doc: DocRow, engine?: EngineDocument) {
       if (isRule) {
         // Quórum: a situação de cada pessoa vem da lista da regra; quem não precisou agir
         // quando a regra se cumpriu fica "não precisou assinar".
-        const m = members.find((u) => (u.email ?? "").toLowerCase() === row.email);
+        const cpf = (row.cpf ?? "").replace(/\D/g, "");
+        const m =
+          members.find((u) => (u.email ?? "").toLowerCase() === row.email) ??
+          (cpf ? members.find((u) => (u.identifier ?? "").replace(/\D/g, "") === cpf) : undefined);
         const done = m?.completeActionDate ?? m?.signatureDate ?? null;
         if (done) {
           next = "completed";

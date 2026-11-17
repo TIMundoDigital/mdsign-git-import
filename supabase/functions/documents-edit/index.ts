@@ -3,8 +3,9 @@
 // caso o SignDoc reinicia o fluxo de assinatura. Quem pode: quem criou ou documents.manage.
 
 import { admin, requireUser, type Caller } from "../_shared/auth.ts";
-import { readPdf, saveObservers } from "../_shared/create.ts";
+import { insertOrReport, readPdf, saveObservers } from "../_shared/create.ts";
 import { syncDocument } from "../_shared/documents.ts";
+import { linkParticipants } from "../_shared/engine-link.ts";
 import { assertFeature } from "../_shared/features.ts";
 import { AppError, corsHeaders, handleError, json } from "../_shared/http.ts";
 import {
@@ -42,11 +43,7 @@ type Doc = {
  * Documento que quem chama pode editar. Participantes: só pendente. Nova versão: pendente ou
  * devolvido para correção (recusa sem rejeição definitiva).
  */
-async function loadEditable(
-  caller: Caller,
-  documentId: string,
-  forVersion = false,
-): Promise<Doc> {
+async function loadEditable(caller: Caller, documentId: string, forVersion = false): Promise<Doc> {
   const { data: doc } = await admin
     .from("documents")
     .select("id, organization_id, created_by, status, engine_document_id, name, refusal_kind")
@@ -143,7 +140,7 @@ Deno.serve(async (req) => {
         .limit(1)
         .maybeSingle();
       const number = (last?.number ?? 1) + 1;
-      await admin.from("document_versions").insert({
+      await insertOrReport("document_versions", {
         document_id: doc.id,
         organization_id: doc.organization_id,
         number,
@@ -151,7 +148,8 @@ Deno.serve(async (req) => {
         sha256: await sha256Hex(bytes),
         size_bytes: bytes.length,
         created_by: caller.user.id,
-        created_by_name: (caller.profile.full_name ?? caller.user.email ?? "").slice(0, 160) || null,
+        created_by_name:
+          (caller.profile.full_name ?? caller.user.email ?? "").slice(0, 160) || null,
       });
       // Correção enviada: o fluxo recomeça no motor e precisa de nova aprovação.
       await admin.from("documents").update({ refusal_kind: null }).eq("id", doc.id);
@@ -305,14 +303,15 @@ Deno.serve(async (req) => {
         .eq("id", e.participantId);
     }
     if (added.length) {
-      const known = new Set((parts ?? []).map((p) => p.engine_flow_action_id));
-      const fresh = (engine.flowActions ?? []).filter((a) => !known.has(a.id));
+      // Ações que já pertencem a quem continua no documento não podem ser reaproveitadas.
+      const known = (parts ?? [])
+        .filter((p) => p.engine_flow_action_id && !removed.includes(p.id as string))
+        .map((p) => p.engine_flow_action_id as string);
+      // Só e-mail ou CPF aqui; quem ficar sem vínculo é religado na sincronização logo abaixo.
+      const links = linkParticipants(added, engine.flowActions ?? [], known, { byPosition: false });
       const rows = [];
-      for (const p of added) {
-        const idx = fresh.findIndex(
-          (a) => (a.user?.email ?? "").toLowerCase() === p.email && a.step === p.step,
-        );
-        const action = idx >= 0 ? fresh.splice(idx, 1)[0] : undefined;
+      for (const [i, p] of added.entries()) {
+        const action = links[i];
         const { data: userId } = await admin.rpc("user_id_by_email", { target: p.email });
         rows.push({
           document_id: doc.id,
@@ -330,7 +329,7 @@ Deno.serve(async (req) => {
           engine_flow_action_id: action?.id ?? null,
         });
       }
-      await admin.from("document_participants").insert(rows);
+      await insertOrReport("document_participants", rows);
     }
     if (obsRows?.length)
       await admin
