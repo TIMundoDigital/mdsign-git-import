@@ -230,7 +230,7 @@ const en: Messages = {
       },
       {
         title: "Signer authentication",
-        text: "When sending, choose how each participant confirms their identity: email, SMS, WhatsApp, authenticator app or selfie, among other available factors.",
+        text: "Today each participant confirms their identity by email. Other factors, such as SMS and WhatsApp, are under certification.",
       },
       {
         title: "Traceability",
@@ -261,7 +261,7 @@ const en: Messages = {
       },
       {
         q: "Can I sign with a digital certificate?",
-        a: "Not yet. ICP-Brasil certificate signatures (e-CPF and e-CNPJ) are under certification and shown as \"Coming soon\" in the plans. Today MDSign offers electronic signatures with evidence.",
+        a: 'Not yet. ICP-Brasil certificate signatures (e-CPF and e-CNPJ) are under certification and shown as "Coming soon" in the plans. Today MDSign offers electronic signatures with evidence.',
       },
       {
         q: "Can I have several users in my company?",

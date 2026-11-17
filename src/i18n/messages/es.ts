@@ -239,7 +239,7 @@ const es: Messages = {
       },
       {
         title: "Autenticación del firmante",
-        text: "Al enviar, define cómo cada participante confirma su identidad: correo electrónico, SMS, WhatsApp, aplicación de autenticación o selfie, entre otros factores disponibles.",
+        text: "Hoy cada participante confirma su identidad por correo electrónico. Otros factores, como SMS y WhatsApp, están en homologación.",
       },
       {
         title: "Trazabilidad",
@@ -271,7 +271,7 @@ const es: Messages = {
       },
       {
         q: "¿Puedo firmar con certificado digital?",
-        a: "Todavía no. La firma con certificado ICP-Brasil (e-CPF y e-CNPJ) está en homologación y aparece como \"Próximamente\" en los planes. Hoy MDSign ofrece firma electrónica con evidencias.",
+        a: 'Todavía no. La firma con certificado ICP-Brasil (e-CPF y e-CNPJ) está en homologación y aparece como "Próximamente" en los planes. Hoy MDSign ofrece firma electrónica con evidencias.',
       },
       {
         q: "¿Puedo tener varios usuarios en la empresa?",

@@ -232,7 +232,7 @@ const pt = {
       },
       {
         title: "Autenticação do signatário",
-        text: "No envio, defina como cada participante confirma a identidade: e-mail, SMS, WhatsApp, aplicativo autenticador ou selfie, entre outros fatores disponíveis.",
+        text: "Hoje cada participante confirma a identidade pelo e-mail. Outros fatores, como SMS e WhatsApp, estão em homologação.",
       },
       {
         title: "Rastreabilidade",
@@ -264,7 +264,7 @@ const pt = {
       },
       {
         q: "Posso assinar com certificado digital?",
-        a: "Ainda não. A assinatura com certificado digital ICP-Brasil (e-CPF e e-CNPJ) está em homologação e aparece como \"Em breve\" nos planos. Hoje o MDSign oferece assinatura eletrônica com evidências.",
+        a: 'Ainda não. A assinatura com certificado digital ICP-Brasil (e-CPF e e-CNPJ) está em homologação e aparece como "Em breve" nos planos. Hoje o MDSign oferece assinatura eletrônica com evidências.',
       },
       {
         q: "Posso ter vários usuários na empresa?",
