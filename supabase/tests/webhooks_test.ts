@@ -330,3 +330,100 @@ Deno.test("Asaas: cliente que não é do MDSign é só registrado", async () => 
     fake.restore();
   }
 });
+
+const { runBilling } = await import("../functions/_shared/billing.ts");
+
+const reversal = (id: string, event: string, status: string) => ({
+  id,
+  event,
+  payment: { id: "pay_1", customer: "cus_1", subscription: "sub_1", value: 39.9, status },
+});
+
+Deno.test("Asaas: estorno suspende; novo pagamento regulariza", async () => {
+  const { fake } = asaasScenario();
+  const sub = () => fake.tables["subscriptions"]![0]!;
+  const acts = () => (fake.tables["audit_calls"] ?? []).map((a) => a["act"]);
+  try {
+    await asaasPost(paid("evt_1"));
+    assertEquals(sub()["status"], "active");
+    await asaasPost(reversal("evt_r", "PAYMENT_REFUNDED", "REFUNDED"));
+    assertEquals(sub()["status"], "suspended", "estorno bloqueia novas operações");
+    assertEquals(sub()["plan_id"], "jacaranda", "nada é apagado");
+    assert(sub()["past_due_since"], "conta o prazo para voltar ao Cedro");
+    assert(acts().includes("billing.refunded"));
+
+    // Cliente paga de novo a mesma assinatura: volta ao normal.
+    await asaasPost({
+      id: "evt_novo",
+      event: "PAYMENT_RECEIVED",
+      payment: {
+        id: "pay_3",
+        customer: "cus_1",
+        subscription: "sub_1",
+        value: 39.9,
+        status: "RECEIVED",
+        paymentDate: "2026-11-20",
+      },
+    });
+    assertEquals(sub()["status"], "active");
+    assertEquals(sub()["past_due_since"], null);
+    assert(acts().includes("billing.regularized"));
+  } finally {
+    fake.restore();
+  }
+});
+
+Deno.test("Asaas: chargeback suspende; estorno parcial não", async () => {
+  const { fake } = asaasScenario();
+  const sub = () => fake.tables["subscriptions"]![0]!;
+  try {
+    await asaasPost(paid("evt_1"));
+    await asaasPost(reversal("evt_p", "PAYMENT_PARTIALLY_REFUNDED", "RECEIVED"));
+    assertEquals(sub()["status"], "active", "desconto parcial não suspende");
+    await asaasPost(reversal("evt_c", "PAYMENT_CHARGEBACK_REQUESTED", "CHARGEBACK_REQUESTED"));
+    assertEquals(sub()["status"], "suspended");
+    assert((fake.tables["audit_calls"] ?? []).some((a) => a["act"] === "billing.chargeback"));
+  } finally {
+    fake.restore();
+  }
+});
+
+Deno.test("Asaas: suspensa há mais de 30 dias volta ao Cedro e para de cobrar", async () => {
+  const { fake, asaasCalls } = asaasScenario();
+  const days = (n: number) => new Date(Date.now() - n * 86400000).toISOString();
+  fake.tables["subscriptions"] = [
+    {
+      organization_id: "org-antiga",
+      plan_id: "ipe",
+      status: "suspended",
+      billing_status: "overdue",
+      asaas_subscription_id: "sub_antiga",
+      past_due_since: days(31),
+      cancel_at: null,
+    },
+    {
+      organization_id: "org-recente",
+      plan_id: "ipe",
+      status: "suspended",
+      billing_status: "overdue",
+      asaas_subscription_id: "sub_recente",
+      past_due_since: days(10),
+      cancel_at: null,
+    },
+  ];
+  try {
+    const out = await runBilling();
+    assertEquals(out.downgraded, 1);
+    assertEquals(out.ended, 1);
+    const [antiga, recente] = fake.tables["subscriptions"]!;
+    assertEquals(antiga!["plan_id"], "cedro");
+    assertEquals(antiga!["status"], "active");
+    assertEquals(antiga!["asaas_subscription_id"], null);
+    assert(asaasCalls.includes("DELETE /v3/subscriptions/sub_antiga"), "parou de cobrar no Asaas");
+    assertEquals(recente!["plan_id"], "ipe", "dentro do prazo continua suspensa");
+    assertEquals(recente!["status"], "suspended");
+    assert(!asaasCalls.some((c) => c.includes("sub_recente")));
+  } finally {
+    fake.restore();
+  }
+});

@@ -339,7 +339,10 @@ export async function createDocument(input: CreateInput): Promise<Created> {
   if (!r.ok)
     throw r.reason === "email_not_confirmed"
       ? new AppError("email_not_confirmed", 403)
-      : new AppError("plan_limit_reached", 402);
+      : // Conta suspensa (pagamento em atraso, estorno) ou encerrada: não é limite de documentos.
+        r.reason === "subscription_inactive"
+        ? new AppError("subscription_inactive", 402)
+        : new AppError("plan_limit_reached", 402);
   const reservation = r.reservation!;
   let creating = false;
   let engineId: string | null = null;

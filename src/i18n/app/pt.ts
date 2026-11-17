@@ -1394,6 +1394,10 @@ const pt = {
       "Você atingiu o limite de documentos do seu plano. Escolha um plano em Organização → Plano e cobrança para continuar. Seus documentos continuam disponíveis (no Cedro, por 6 meses a partir da criação).",
     plan_users_limit:
       "Seu plano não permite mais usuários. Escolha um plano maior em Organização → Plano e cobrança.",
+    subscription_inactive:
+      "A conta está suspensa por uma pendência de pagamento, ou foi encerrada, por isso novos documentos estão bloqueados. Para regularizar o pagamento, vá em Organização → Plano e cobrança. Seus documentos, histórico e usuários continuam preservados.",
+    feature_not_in_plan:
+      "Este recurso não faz parte do plano da sua organização. Veja os planos em Organização → Plano e cobrança.",
     invalid_participants: "Confira os participantes destacados.",
     participants_required: "Adicione pelo menos um participante.",
     too_many_participants: "Use no máximo 30 participantes por documento.",

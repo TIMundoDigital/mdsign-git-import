@@ -14,6 +14,15 @@ import { asaas, asaasEnv, type AsaasPayment, type AsaasSubscription } from "./as
 import { admin } from "./auth.ts";
 
 const PAID = new Set(["PAYMENT_CONFIRMED", "PAYMENT_RECEIVED"]);
+/**
+ * Dinheiro devolvido ao cliente: estorno total ou contestação no cartão (chargeback). Estorno
+ * parcial (ex.: desconto) não suspende.
+ */
+const REVERSED = new Set([
+  "PAYMENT_REFUNDED",
+  "PAYMENT_CHARGEBACK_REQUESTED",
+  "PAYMENT_CHARGEBACK_DISPUTE",
+]);
 const cents = (v: number | null | undefined) => (v == null ? null : Math.round(Number(v) * 100));
 
 type Sub = {
@@ -188,6 +197,35 @@ export async function processBillingEvent(event: {
     await savePayment(sub.organization_id, payment);
     if (PAID.has(event.event)) await onPaid(sub, payment);
     else if (
+      REVERSED.has(event.event) &&
+      payment.subscription &&
+      payment.subscription === sub.asaas_subscription_id &&
+      (sub.status === "active" || sub.status === "past_due")
+    ) {
+      // Estorno ou chargeback da assinatura atual: o dinheiro voltou ao cliente. Suspende novas
+      // operações (nada é apagado) e conta a partir de agora para a volta ao Cedro. Um novo
+      // pagamento confirmado regulariza (onPaid).
+      const now = new Date().toISOString();
+      await admin
+        .from("subscriptions")
+        .update({
+          status: "suspended",
+          billing_status: "overdue",
+          past_due_since: now,
+          last_sync_at: now,
+        })
+        .eq("organization_id", sub.organization_id);
+      await admin.from("policy_events").insert({
+        organization_id: sub.organization_id,
+        policy_id: "billing_grace",
+        data: { action: "suspended", reason: event.event, payment: payment.id },
+      });
+      await audit(
+        sub.organization_id,
+        event.event === "PAYMENT_REFUNDED" ? "billing.refunded" : "billing.chargeback",
+        { payment: payment.id, event: event.event },
+      );
+    } else if (
       event.event === "PAYMENT_OVERDUE" &&
       payment.subscription &&
       payment.subscription !== sub.asaas_subscription_id
@@ -244,7 +282,7 @@ export async function processBillingEvent(event: {
 
 /** Rotina de hora em hora: reprocessa eventos, suspende após a tolerância, encerra cancelados. */
 export async function runBilling() {
-  const out = { retried: 0, suspended: 0, ended: 0 };
+  const out = { retried: 0, suspended: 0, downgraded: 0, ended: 0 };
   try {
     asaasEnv();
   } catch {
@@ -284,7 +322,14 @@ export async function runBilling() {
     .select("config, active")
     .eq("id", "billing_grace")
     .maybeSingle();
-  const days = grace?.active ? Number((grace.config as { days?: number }).days ?? 7) : 7;
+  const graceCfg = (grace?.active ? grace.config : {}) as {
+    days?: number;
+    downgrade_days?: number;
+  };
+  const days = Number(graceCfg.days ?? 7);
+  // Suspensa há mais que isto (desde o atraso ou o estorno): volta ao Cedro e para de cobrar.
+  // Ajustável no Super Admin → Políticas → billing_grace ("downgrade_days").
+  const downgradeDays = Number(graceCfg.downgrade_days ?? 30);
   const { data: late } = await admin
     .from("subscriptions")
     .select("organization_id")
@@ -303,6 +348,33 @@ export async function runBilling() {
     });
     await audit(s.organization_id, "billing.suspended", { days });
     out.suspended++;
+  }
+
+  // Suspensão longa: encerra a assinatura no Asaas (para de cobrar) e agenda a volta ao Cedro
+  // logo abaixo. Documentos, histórico e usuários continuam preservados.
+  const { data: stale } = await admin
+    .from("subscriptions")
+    .select("organization_id, asaas_subscription_id")
+    .eq("status", "suspended")
+    .is("cancel_at", null)
+    .lt("past_due_since", new Date(Date.now() - downgradeDays * 86400000).toISOString());
+  for (const s of stale ?? []) {
+    if (s.asaas_subscription_id) {
+      try {
+        await asaas.deleteSubscription(s.asaas_subscription_id);
+      } catch (e) {
+        // Fica registrado; a volta ao Cedro segue (o MDSign já não libera o plano pago).
+        console.error("asaas delete suspended subscription", s.asaas_subscription_id, e);
+      }
+    }
+    await admin
+      .from("subscriptions")
+      .update({ cancel_at: new Date(Date.now() - 1000).toISOString() })
+      .eq("organization_id", s.organization_id)
+      .eq("status", "suspended")
+      .is("cancel_at", null);
+    await audit(s.organization_id, "billing.downgraded", { days: downgradeDays });
+    out.downgraded++;
   }
 
   // Cancelamento: fim do período pago → volta ao Cedro (nada é apagado).

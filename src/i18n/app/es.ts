@@ -1386,6 +1386,10 @@ const es: AppMessages = {
       "Alcanzó el límite de documentos de su plan. Elija un plan en Organización → Plan y cobro para continuar. Sus documentos siguen disponibles (en Cedro, por 6 meses desde su creación).",
     plan_users_limit:
       "Su plan no permite más usuarios. Elija un plan mayor en Organización → Plan y cobro.",
+    subscription_inactive:
+      "La cuenta está suspendida por un pago pendiente, o fue cerrada, por eso los nuevos documentos están bloqueados. Para regularizar el pago, vaya a Organización → Plan y cobro. Sus documentos, historial y usuarios siguen preservados.",
+    feature_not_in_plan:
+      "Este recurso no forma parte del plan de su organización. Vea los planes en Organización → Plan y cobro.",
     invalid_participants: "Revisa los participantes destacados.",
     participants_required: "Agrega al menos un participante.",
     too_many_participants: "Usa como máximo 30 participantes por documento.",
