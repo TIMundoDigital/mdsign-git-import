@@ -5,6 +5,18 @@
 //     React/TanStack dedupe, error logger plugins, and sandbox detection (port/host/strictPort).
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { loadEnv } from "vite";
+
+import { productionConfigProblems } from "./src/config/build-check";
+
+// Build de produção (VITE_ENVIRONMENT=production) exige os endereços do ambiente de produção.
+// Sem essa variável, como no Lovable hoje, nada muda.
+const problems = productionConfigProblems({
+  ...loadEnv("production", process.cwd(), "VITE_"),
+  ...process.env,
+});
+if (problems.length)
+  throw new Error(`Configuração de produção incompleta: ${problems.join("; ")}. Ver .env.example.`);
 
 export default defineConfig({
   tanstackStart: {
