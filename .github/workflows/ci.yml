@@ -30,7 +30,10 @@ jobs:
       - name: Build
         run: bunx vite build
       - name: Dependências vulneráveis (falha em alta ou crítica)
-        run: bun audit --audit-level=high
+        # GHSA-fc5q-39xc-vjpf (picomatch <= 4.0.7, ReDoS): só ferramentas de build e teste (Vite,
+        # Vitest, ESLint, TanStack), nada no site publicado; sem versão corrigida em 17/11/2026.
+        # Retirar o --ignore quando sair o picomatch corrigido.
+        run: bun audit --audit-level=high --ignore=GHSA-fc5q-39xc-vjpf
 
   # Funções do servidor (Deno): tipos das 22 funções e testes da lógica (sem rede, sem banco).
   # Roda numa cópia da pasta supabase: o Deno não deve tocar o node_modules da raiz.
@@ -52,3 +55,16 @@ jobs:
           cd "$RUNNER_TEMP/supabase"
           deno check functions/*/index.ts
           deno test -A tests/
+
+  # Banco: aplica as migrações num Postgres local do Supabase (descartado no fim) e roda as suítes
+  # de RLS/permissões e de regras comerciais. Não usa o banco hospedado nem segredos.
+  banco:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Migrações, RLS e regras comerciais
+        run: bash scripts/test-db-local.sh
