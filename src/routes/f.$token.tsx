@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { CheckCircle2, Loader2, ShieldCheck } from "lucide-react";
 
@@ -47,6 +47,9 @@ function PublicForm() {
   const [signer, setSigner] = useState({ name: "", email: "", cpf: "", noCpf: false });
   const [values, setValues] = useState<Record<string, string>>({});
   const [website, setWebsite] = useState("");
+  // Um identificador por preenchimento: reenviar (duplo clique, nova tentativa depois de erro)
+  // devolve o mesmo documento em vez de criar e contar outro.
+  const requestId = useRef(crypto.randomUUID());
   const [bad, setBad] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [phase, setPhase] = useState<"fill" | "preparing" | "signing" | "done">("fill");
@@ -78,6 +81,7 @@ function PublicForm() {
         {
           token,
           action: "submit",
+          requestId: requestId.current,
           website,
           signer: {
             name: signer.name.trim(),

@@ -125,7 +125,13 @@ async function saveAttachments(
   }
 }
 
-export type Created = { documentId: string; engineDocumentId: string; participantIds: string[] };
+export type Created = {
+  documentId: string;
+  engineDocumentId: string;
+  participantIds: string[];
+  /** true = a mesma requisição já tinha criado este documento (nada novo foi criado agora). */
+  existing?: boolean;
+};
 
 function toBase64(bytes: Uint8Array): string {
   let binary = "";
@@ -583,6 +589,7 @@ async function existingDocument(documentId: string): Promise<Created> {
     documentId: doc.id as string,
     engineDocumentId: doc.engine_document_id as string,
     participantIds: ((doc.document_participants as { id: string }[] | null) ?? []).map((p) => p.id),
+    existing: true,
   };
 }
 

@@ -4,7 +4,7 @@
 
 import { assertFeature } from "../_shared/features.ts";
 import { admin } from "../_shared/auth.ts";
-import { createDocument } from "../_shared/create.ts";
+import { createDocument, optionalKey, requestKey } from "../_shared/create.ts";
 import { AppError, corsHeaders, handleError, json } from "../_shared/http.ts";
 import {
   cleanParticipants,
@@ -161,9 +161,12 @@ Deno.serve(async (req) => {
     await assertFeature(form.organization_id, "forms");
     const { data: claimed } = await admin.rpc("claim_form_slot", { target: form.id });
     if (!claimed) throw new AppError("form_closed", 410);
+    // A vaga só volta se nada foi criado. Depois que o documento existe (no motor e no MDSign) ele
+    // já foi contado: devolver a vaga deixaria o formulário aceitar mais respostas que o limite.
+    let created: Awaited<ReturnType<typeof createDocument>> | null = null;
     try {
       const name = `${template.name} — ${participant!.name}`.slice(0, 200);
-      const created = await createDocument({
+      created = await createDocument({
         organizationId: form.organization_id,
         createdBy: form.created_by,
         actorName: participant!.name,
@@ -179,17 +182,25 @@ Deno.serve(async (req) => {
         origin: "form",
         templateId: template.id,
         saveContacts: true,
+        // Mesmo envio de novo (duplo clique, nova tentativa da rede): devolve o mesmo documento.
+        ...optionalKey(requestKey("form", form.id, body["requestId"])),
       });
-      await admin
-        .from("form_submissions")
-        .insert({ form_id: form.id, document_id: created.documentId, ip_hash: ipHash });
+      if (created.existing) {
+        // Já contado na primeira vez: a vaga desta tentativa volta e a resposta não se repete.
+        await admin.rpc("release_form_slot", { target: form.id });
+      } else {
+        const { error } = await admin
+          .from("form_submissions")
+          .insert({ form_id: form.id, document_id: created.documentId, ip_hash: ipHash });
+        if (error) console.error("form_submissions", error.code ?? "");
+      }
       const action = await signdoc.actionUrl(created.engineDocumentId, {
         emailAddress: participant!.email,
         ...(participant!.cpf ? { identifier: participant!.cpf } : {}),
       });
       return json({ embedUrl: action.embedUrl, redirectUrl: form.redirect_url }, 200, origin);
     } catch (error) {
-      await admin.rpc("release_form_slot", { target: form.id });
+      if (!created) await admin.rpc("release_form_slot", { target: form.id });
       throw error;
     }
   } catch (error) {
