@@ -1125,6 +1125,7 @@ const es: AppMessages = {
     } as Record<string, string>,
   },
   documents: {
+    loadMore: "Cargar {n} documentos más",
     quorumOf: "basta {n} de {total}",
     cedroAvailable:
       "Plan Cedro: disponible para consulta y descarga hasta el {date} (6 meses desde la creación).",

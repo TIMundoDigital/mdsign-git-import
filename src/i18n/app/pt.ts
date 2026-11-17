@@ -1136,6 +1136,7 @@ const pt = {
     } as Record<string, string>,
   },
   documents: {
+    loadMore: "Carregar mais {n} documentos",
     quorumOf: "basta {n} de {total}",
     cedroAvailable:
       "Plano Cedro: disponível para consulta e download até {date} (6 meses a partir da criação).",

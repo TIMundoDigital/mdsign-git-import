@@ -47,6 +47,9 @@ type Tab = "all" | "waiting" | "forMe" | "concluded";
 
 const tabs: Tab[] = ["all", "waiting", "forMe", "concluded"];
 
+/** Documentos por página na lista. */
+const PAGE = 200;
+
 export const Route = createFileRoute("/app/_shell/documents/")({
   validateSearch: (
     search: Record<string, unknown>,
@@ -72,6 +75,9 @@ function DocumentsPage() {
   const [managing, setManaging] = useState(false);
   const [moving, setMoving] = useState(false);
   const [docs, setDocs] = useState<DocumentRow[] | null>(null);
+  // Páginas de PAGE documentos (auditoria P1-8): acima disso, "Carregar mais" traz os seguintes.
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [queue, setQueue] = useState<DocumentRow[] | null>(null);
   const [zipping, setZipping] = useState(false);
@@ -85,19 +91,51 @@ function DocumentsPage() {
   // Depende só do id: o objeto da organização é recriado quando o app atualiza o contexto,
   // e isso não pode recarregar a lista (nem limpar a seleção).
   const orgId = current?.id;
+  const page = useCallback(
+    async (from: number) => {
+      const { data } = await supabase
+        .from("documents")
+        .select(documentSelect)
+        .eq("organization_id", orgId!)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: false })
+        .range(from, from + PAGE - 1);
+      const rows = (data as DocumentRow[] | null) ?? [];
+      setHasMore(rows.length === PAGE);
+      return rows;
+    },
+    [orgId],
+  );
+  // Recarrega o que já estava na tela (mesmo número de páginas), sem perder documentos.
   const load = useCallback(async () => {
     if (!orgId) return;
-    const { data } = await supabase
-      .from("documents")
-      .select(documentSelect)
-      .eq("organization_id", orgId)
-      .is("deleted_at", null)
-      .order("created_at", { ascending: false })
-      .limit(200);
-    setDocs((data as DocumentRow[] | null) ?? []);
-  }, [orgId]);
+    const pages = Math.max(1, Math.ceil((docsRef.current?.length ?? 0) / PAGE));
+    const all: DocumentRow[] = [];
+    for (let i = 0; i < pages; i++) {
+      const rows = await page(i * PAGE);
+      all.push(...rows);
+      if (rows.length < PAGE) break;
+    }
+    setDocs(all);
+  }, [orgId, page]);
+  const loadMore = async () => {
+    setLoadingMore(true);
+    try {
+      const rows = await page(docs?.length ?? 0);
+      setDocs((prev) => {
+        const seen = new Set((prev ?? []).map((d) => d.id));
+        return [...(prev ?? []), ...rows.filter((d) => !seen.has(d.id))];
+      });
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
+  const docsRef = useRef<DocumentRow[] | null>(null);
+  docsRef.current = docs;
   useEffect(() => {
+    docsRef.current = null;
     setDocs(null);
     setSelected(new Set());
     void load();
@@ -601,6 +639,14 @@ function DocumentsPage() {
               );
             })}
           </ul>
+          {hasMore && (
+            <div className="mt-4 flex justify-center">
+              <Button variant="outline" onClick={() => void loadMore()} disabled={loadingMore}>
+                {loadingMore && <Loader2 className="animate-spin" aria-hidden />}
+                {f(t.documents.loadMore, { n: String(PAGE) })}
+              </Button>
+            </div>
+          )}
         </>
       )}
     </>

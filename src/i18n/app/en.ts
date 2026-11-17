@@ -1109,6 +1109,7 @@ const en: AppMessages = {
     } as Record<string, string>,
   },
   documents: {
+    loadMore: "Load {n} more documents",
     quorumOf: "any {n} of {total}",
     cedroAvailable:
       "Cedro plan: available to view and download until {date} (6 months from creation).",
