@@ -1406,6 +1406,8 @@ const es: AppMessages = {
       "Antes de cerrar, descargue todos los documentos (ZIP) en Organización → Exportar y cerrar.",
     email_not_confirmed:
       "Confirma tu correo (con el enlace que enviamos en el registro) para usar los documentos gratuitos.",
+    request_id_required:
+      "No fue posible identificar este envío. Recargue la página e intente de nuevo.",
     request_in_progress:
       "Este envío ya se está procesando. Espera unos segundos y revisa Documentos antes de intentar de nuevo.",
     plan_limit_reached:

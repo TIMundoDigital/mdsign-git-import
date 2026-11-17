@@ -187,3 +187,15 @@ Deno.test("webhooks: nome que aponta para endereço interno é recusado", async 
   // DNS indisponível no ambiente: vale a checagem pelo texto (não bloqueia tudo).
   assertEquals(await isPublicHost("cliente.com.br", null), true);
 });
+
+// ---------- Identificador de envio obrigatório nas telas (Q-2) ----------
+import { assertThrows } from "jsr:@std/assert@1";
+import { requiredKey } from "../functions/_shared/create.ts";
+
+Deno.test("envio: identificador obrigatório e só em formato seguro", () => {
+  assertEquals(requiredKey("send", "u1", "abc12345-xyz"), {
+    idempotencyKey: "send:u1:abc12345-xyz",
+  });
+  for (const bad of [undefined, "", "curto", "tem espaço aqui", "a".repeat(65), "x;drop"])
+    assertThrows(() => requiredKey("send", "u1", bad), Error, "request_id_required");
+});

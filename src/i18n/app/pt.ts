@@ -1413,6 +1413,8 @@ const pt = {
       "Antes de encerrar, baixe todos os documentos (ZIP) em Organização → Exportar e encerrar.",
     email_not_confirmed:
       "Confirme o seu e-mail (pelo link que enviamos no cadastro) para usar os documentos gratuitos.",
+    request_id_required:
+      "Não foi possível identificar este envio. Recarregue a página e tente de novo.",
     request_in_progress:
       "Este envio já está sendo processado. Aguarde alguns segundos e confira em Documentos antes de tentar de novo.",
     plan_limit_reached:

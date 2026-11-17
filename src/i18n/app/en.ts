@@ -1385,6 +1385,7 @@ const en: AppMessages = {
       "Before closing, download all documents (ZIP) in Organization → Export and close.",
     email_not_confirmed:
       "Confirm your email (using the link we sent at signup) to use the free documents.",
+    request_id_required: "This submission could not be identified. Reload the page and try again.",
     request_in_progress:
       "This request is already being processed. Wait a few seconds and check Documents before trying again.",
     plan_limit_reached:

@@ -305,6 +305,17 @@ export function requestKey(scope: string, owner: string, raw: unknown): string |
 
 export const optionalKey = (key: string | undefined) => (key ? { idempotencyKey: key } : {});
 
+/**
+ * Telas do MDSign (envio, modelo, "Só eu assino"): o identificador do envio é obrigatório, para que
+ * repetir a chamada nunca crie e cobre outro documento (auditoria Q-2). A API pública continua
+ * com a chave opcional, por contrato.
+ */
+export function requiredKey(scope: string, owner: string, raw: unknown) {
+  const key = requestKey(scope, owner, raw);
+  if (!key) throw new AppError("request_id_required", 400);
+  return { idempotencyKey: key };
+}
+
 export async function createDocument(input: CreateInput): Promise<Created> {
   // PDF com conteúdo ativo (scripts, anexos, ações) é recusado antes de consumir o plano.
   await assertSafePdf(input.pdf);

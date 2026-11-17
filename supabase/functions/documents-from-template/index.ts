@@ -4,7 +4,7 @@
 
 import { assertFeature } from "../_shared/features.ts";
 import { requirePermission, requireUser } from "../_shared/auth.ts";
-import { createDocument, optionalKey, requestKey } from "../_shared/create.ts";
+import { createDocument, requiredKey } from "../_shared/create.ts";
 import { AppError, corsHeaders, handleError, json } from "../_shared/http.ts";
 import { cleanExpiration, cleanLocale, cleanMessage, cleanReminders } from "../_shared/options.ts";
 import {
@@ -141,7 +141,7 @@ Deno.serve(async (req) => {
       origin: "template",
       templateId: template.id,
       folderId: p.folderId ?? null,
-      ...optionalKey(requestKey("template", user.id, p.requestId)),
+      ...requiredKey("template", user.id, p.requestId),
     };
 
     if (p.mode === "self") {
