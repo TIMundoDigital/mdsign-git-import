@@ -3,7 +3,8 @@
 // caso o SignDoc reinicia o fluxo de assinatura. Quem pode: quem criou ou documents.manage.
 
 import { admin, requireUser, type Caller } from "../_shared/auth.ts";
-import { insertOrReport, readPdf, saveObservers } from "../_shared/create.ts";
+import { applyDelegations, insertOrReport, readPdf, saveObservers } from "../_shared/create.ts";
+import { enqueueChannels, enqueueEmail } from "../_shared/notifications.ts";
 import { syncDocument } from "../_shared/documents.ts";
 import { linkParticipants } from "../_shared/engine-link.ts";
 import { assertFeature } from "../_shared/features.ts";
@@ -11,6 +12,7 @@ import { AppError, corsHeaders, handleError, json } from "../_shared/http.ts";
 import {
   cleanObservers,
   cleanParticipants,
+  editDuplicates,
   normalizePhone,
   toFlowAction,
   toObserver,
@@ -245,6 +247,23 @@ Deno.serve(async (req) => {
       const wanted = Math.trunc(Number(addedRaw[i]?.step)) || lastStep + 1;
       p.step = Math.max(wanted, pendingStep === Number.MAX_SAFE_INTEGER ? 1 : pendingStep);
     });
+    // Ninguém entra duas vezes no documento: o e-mail de quem é incluído (ou o novo e-mail de quem
+    // é editado) não pode ser o de alguém que continua nele.
+    const { staying, duplicates } = editDuplicates(
+      (parts ?? []).map((p) => ({ id: p.id as string, email: p.email as string })),
+      removed,
+      edited,
+      added,
+    );
+    if (duplicates.length) throw new AppError("invalid_participants", 422, duplicates);
+    // Aprovação incluída na edição segue a delegação vigente, como no envio. Se o delegado já
+    // estiver no documento, a aprovação fica com o titular.
+    const delegated = await applyDelegations(doc.organization_id, added);
+    delegated.list.forEach((p, i) => {
+      if (delegated.info[i] && staying.has(p.email)) delegated.info[i] = null;
+      else added[i] = { ...p, rule: null };
+    });
+    const delegation = delegated.info;
     const addedObservers = cleanObservers(body["addedObservers"]);
     const removedObservers = (
       Array.isArray(body["removedObservers"]) ? body["removedObservers"] : []
@@ -287,7 +306,19 @@ Deno.serve(async (req) => {
     // Espelha no MDSign o que o motor aceitou.
     const engine = await signdoc.getDocument(doc.engine_document_id);
     if (removed.length) await admin.from("document_participants").delete().in("id", removed);
+    // Convites pelos canais do MDSign para quem passa a ter a vez por esta edição. Com e-mail
+    // próprio o motor não manda convite; sem ele, a fila ignora o e-mail (o motor manda), como no
+    // envio. Incluído: e-mail e WhatsApp. E-mail trocado: só o e-mail (o celular é o mesmo).
+    const invite: string[] = [];
+    const inviteByEmail: string[] = [];
     for (const e of edited) {
+      const before = byId.get(e.participantId);
+      if (
+        e.email &&
+        before?.status === "pending" &&
+        String(e.email).trim().toLowerCase() !== before.email
+      )
+        inviteByEmail.push(e.participantId);
       const email = e.email ? String(e.email).trim().toLowerCase() : undefined;
       const phone = e.phone ? normalizePhone(e.phone) : undefined;
       if (!email && !phone) continue;
@@ -312,6 +343,7 @@ Deno.serve(async (req) => {
       const rows = [];
       for (const [i, p] of added.entries()) {
         const action = links[i];
+        const d = delegation[i];
         const { data: userId } = await admin.rpc("user_id_by_email", { target: p.email });
         rows.push({
           document_id: doc.id,
@@ -327,9 +359,17 @@ Deno.serve(async (req) => {
           auth_level: p.authLevel,
           status: action?.status === "Created" ? "created" : "pending",
           engine_flow_action_id: action?.id ?? null,
+          ...(d
+            ? {
+                delegated_from_user: d.fromUser,
+                delegated_from_name: d.fromName,
+                delegation_id: d.delegationId,
+              }
+            : {}),
         });
       }
-      await insertOrReport("document_participants", rows);
+      const inserted = await insertOrReport("document_participants", rows, "id, status");
+      invite.push(...inserted.filter((r) => r.status === "pending").map((r) => r.id as string));
     }
     if (obsRows?.length)
       await admin
@@ -347,6 +387,19 @@ Deno.serve(async (req) => {
     for (const e of edited)
       await event(doc, caller, "participant.updated", byId.get(e.participantId)!.name as string);
     for (const p of added) await event(doc, caller, "participant.added", p.name, { role: p.role });
+    for (const [i, p] of added.entries()) {
+      const d = delegation[i];
+      if (d)
+        await event(doc, caller, "participant.delegated", p.name, {
+          from: d.fromName,
+          delegation: d.delegationId,
+        });
+    }
+    if (invite.length) await enqueueChannels(doc.id, invite, "signature_requested", caller.user.id);
+    if (inviteByEmail.length)
+      await enqueueEmail(doc.id, inviteByEmail, "signature_requested", caller.user.id).catch((e) =>
+        console.error("enqueue email", e),
+      );
     for (const o of addedObservers) await event(doc, caller, "observer.added", o.name);
     for (const o of obsRows ?? []) await event(doc, caller, "observer.removed", o.email as string);
     await admin.rpc("write_audit_as", {

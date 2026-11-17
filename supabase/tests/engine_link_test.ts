@@ -2,6 +2,7 @@
 // Rodar como os demais testes Deno: numa cópia da pasta supabase, fora da raiz do repositório.
 import { assertEquals } from "jsr:@std/assert@1";
 import { linkParticipants, type LinkPerson } from "../functions/_shared/engine-link.ts";
+import { editDuplicates } from "../functions/_shared/participants.ts";
 import type { EngineFlowAction } from "../functions/_shared/signdoc.ts";
 
 const action = (
@@ -114,4 +115,32 @@ Deno.test("motor: grupo achado pelo nome quando ninguém casa por e-mail ou CPF"
     action("r2", "ApproverRule", 1, undefined, { ruleName: "Jurídico", ruleUsers: [] }),
   ];
   assertEquals(ids(linkParticipants(people, actions)), ["r2"]);
+});
+
+Deno.test("edição: ninguém entra duas vezes no documento", () => {
+  const current = [
+    { id: "p1", email: "ana@ex.com" },
+    { id: "p2", email: "bia@ex.com" },
+  ];
+  // Incluir quem já está: recusado.
+  assertEquals(editDuplicates(current, [], [], [{ email: "ana@ex.com" }]).duplicates, [
+    { index: 0, field: "duplicate" },
+  ]);
+  // Quem saiu pode voltar na mesma edição.
+  assertEquals(editDuplicates(current, ["p1"], [], [{ email: "ana@ex.com" }]).duplicates, []);
+  // Trocar o e-mail de alguém para o de outra pessoa do documento: recusado.
+  assertEquals(
+    editDuplicates(current, [], [{ participantId: "p2", email: " ANA@ex.com " }], []).duplicates,
+    [{ index: -1, field: "duplicate" }],
+  );
+  // O e-mail antigo de quem foi editado fica livre para um novo participante.
+  assertEquals(
+    editDuplicates(
+      current,
+      [],
+      [{ participantId: "p2", email: "bia2@ex.com" }],
+      [{ email: "bia@ex.com" }],
+    ).duplicates,
+    [],
+  );
 });

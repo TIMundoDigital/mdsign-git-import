@@ -243,6 +243,37 @@ export const witnessTitle: Record<string, string> = {
   es: "Testigo",
 };
 
+/**
+ * Edição de um documento enviado: ninguém entra duas vezes. O e-mail de quem é incluído, ou o novo
+ * e-mail de quem é editado, não pode ser o de alguém que continua no documento.
+ * Devolve os e-mails finais de quem continua e os problemas (index = posição em `added`;
+ * -1 = conflito entre pessoas que já estavam no documento).
+ */
+export function editDuplicates(
+  current: { id: string; email: string }[],
+  removed: string[],
+  edited: { participantId: string; email?: string }[],
+  added: { email: string }[],
+) {
+  const newEmail = new Map(
+    edited
+      .filter((e) => e.email)
+      .map((e) => [e.participantId, String(e.email).trim().toLowerCase()]),
+  );
+  const staying = new Set<string>();
+  const duplicates: { index: number; field: string }[] = [];
+  for (const p of current) {
+    if (removed.includes(p.id)) continue;
+    const email = newEmail.get(p.id) ?? p.email;
+    if (staying.has(email)) duplicates.push({ index: -1, field: "duplicate" });
+    staying.add(email);
+  }
+  added.forEach((p, i) => {
+    if (staying.has(p.email)) duplicates.push({ index: i, field: "duplicate" });
+  });
+  return { staying, duplicates };
+}
+
 export type ObserverInput = { name: string; email: string; cpf: string | null };
 
 /** Observadores: acompanham e recebem as notificações, sem assinar. */

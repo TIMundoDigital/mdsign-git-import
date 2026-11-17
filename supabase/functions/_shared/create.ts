@@ -142,7 +142,7 @@ type Delegation = { fromUser: string; fromName: string; delegationId: string | n
  * delegado — que age com a própria identidade (nome, e-mail e CPF dele). Assinaturas nunca
  * são delegadas. Sem CPF no perfil do delegado (o motor exige), a aprovação fica com o titular.
  */
-async function applyDelegations(organizationId: string, list: CleanParticipant[]) {
+export async function applyDelegations(organizationId: string, list: CleanParticipant[]) {
   const info: Delegation[] = [];
   const out: CleanParticipant[] = [];
   for (const p of list) {
