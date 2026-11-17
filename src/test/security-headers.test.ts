@@ -26,8 +26,9 @@ describe("cabeçalhos de segurança", () => {
       "'self'",
       "https://lovable.dev",
       "https://*.lovable.dev",
-      "https://*.lovableproject.com",
     ]);
+    // Projetos de outros usuários do Lovable não podem exibir o MDSign numa moldura.
+    expect(dir("frame-ancestors").join(" ")).not.toContain("lovableproject.com");
   });
 
   it("acrescenta os cabeçalhos sem mudar status e corpo", async () => {

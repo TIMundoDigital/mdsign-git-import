@@ -5,8 +5,10 @@
 // Google Tag Manager. 'unsafe-inline' em script-src é exigido pelos scripts de hidratação do
 // TanStack Start e pelo script de consentimento no <head>.
 // frame-ancestors: ninguém exibe o MDSign dentro de outro site, exceto o editor do Lovable
-// (a pré-visualização do projeto é um iframe). Por isso não há X-Frame-Options (ele não aceita
-// uma lista de origens).
+// (lovable.dev; a pré-visualização do projeto é um iframe). *.lovableproject.com ficou de fora
+// (auditoria D-18, 18/11/2026): é onde ficam os projetos de qualquer usuário do Lovable, que
+// poderiam exibir o MDSign numa moldura (clickjacking). Por isso não há X-Frame-Options (ele não
+// aceita uma lista de origens).
 
 import { siteConfig } from "@/config/site";
 
@@ -21,11 +23,7 @@ const GTM = siteConfig.gtmId
       "https://*.analytics.google.com",
     ]
   : [];
-const LOVABLE_EDITOR = [
-  "https://lovable.dev",
-  "https://*.lovable.dev",
-  "https://*.lovableproject.com",
-];
+const LOVABLE_EDITOR = ["https://lovable.dev", "https://*.lovable.dev"];
 
 export function contentSecurityPolicy(dev = false) {
   const supabase = (
