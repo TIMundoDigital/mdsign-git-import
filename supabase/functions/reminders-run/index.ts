@@ -3,6 +3,7 @@
 // recorrência e máximo. Para quando a pessoa assina (o status vem do motor).
 
 import { safeEqual } from "../_shared/net.ts";
+import { notifyNewAlerts } from "../_shared/alerts.ts";
 import { admin } from "../_shared/auth.ts";
 import { processBulk } from "../_shared/bulk.ts";
 import { runBilling } from "../_shared/billing.ts";
@@ -133,6 +134,8 @@ Deno.serve(async (req) => {
     await admin.rpc("sweep_document_charges");
     const { data } = await admin.rpc("refresh_platform_alerts");
     alerts = data;
+    // Alertas recém-abertos também por e-mail aos Super Admins (uma vez por abertura).
+    await notifyNewAlerts();
   } catch (e) {
     console.error("alerts", e);
   }

@@ -347,3 +347,32 @@ export function downgradeNoticeEmail(p: {
   ].join("\n");
   return { subject, html, text };
 }
+
+/** Alertas da plataforma para os Super Admins (equipe MDTech: só em português). */
+export function alertsEmail(p: { items: { label: string; count: number }[]; adminUrl: string }) {
+  const n = p.items.length;
+  const subject = `[MDSign] ${n === 1 ? "1 alerta novo" : `${n} alertas novos`} na plataforma`;
+  const rows = p.items
+    .map(
+      (i) =>
+        `<li style="margin:0 0 6px">${escapeHtml(i.label)}${i.count ? ` <span style="color:#5b5570">(${i.count})</span>` : ""}</li>`,
+    )
+    .join("");
+  const html = `<!doctype html><html><body style="margin:0;background:#f4f2f8;font-family:Arial,Helvetica,sans-serif;color:#1f1a2e">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f2f8;padding:24px 12px"><tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:12px;overflow:hidden">
+<tr><td style="background:#9724C2;padding:18px 24px;color:#ffffff;font-size:20px;font-weight:bold">MDSign · Super Admin</td></tr>
+<tr><td style="padding:24px;font-size:16px;line-height:1.5">
+<p style="margin:0 0 12px">Alertas abertos na plataforma:</p>
+<ul style="margin:0 0 16px;padding-left:20px">${rows}</ul>
+<p style="margin:24px 0" align="center"><a href="${escapeHtml(p.adminUrl)}" style="display:inline-block;background:#9724C2;color:#ffffff;text-decoration:none;font-weight:bold;padding:12px 24px;border-radius:8px">Abrir o Super Admin</a></p>
+<p style="margin:0;color:#5b5570;font-size:13px">Cada alerta é avisado uma vez; ele fecha sozinho quando a condição some. Ver docs/runbook.md, seção 8.</p>
+</td></tr></table></td></tr></table></body></html>`;
+  const text = [
+    "Alertas abertos na plataforma:",
+    ...p.items.map((i) => `- ${i.label}${i.count ? ` (${i.count})` : ""}`),
+    "",
+    `Abrir o Super Admin: ${p.adminUrl}`,
+  ].join("\n");
+  return { subject, html, text };
+}

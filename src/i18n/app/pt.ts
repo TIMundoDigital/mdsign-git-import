@@ -644,6 +644,7 @@ const pt = {
         engine_events_failed: "Webhooks do motor sem processar após 5 tentativas",
         data_requests_overdue: "Pedidos de titulares vencidos",
         bulk_stuck: "Envio em massa parado há mais de 1 hora",
+        document_charges_unknown: "Consumo de documento a conferir (resultado incerto no motor)",
         documents_incomplete:
           "Documentos pendentes incompletos no MDSign (participante sem vínculo com o motor, sem participantes ou sem versão)",
       } as Record<string, string>,

@@ -633,6 +633,8 @@ const es: AppMessages = {
         engine_events_failed: "Webhooks del motor sin procesar tras 5 intentos",
         data_requests_overdue: "Pedidos de titulares vencidos",
         bulk_stuck: "Envío masivo detenido hace más de 1 hora",
+        document_charges_unknown:
+          "Consumo de documento por revisar (resultado incierto en el motor)",
         documents_incomplete:
           "Documentos pendientes incompletos en MDSign (participante sin vínculo con el motor, sin participantes o sin versión)",
       } as Record<string, string>,
