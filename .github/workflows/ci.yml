@@ -50,6 +50,9 @@ jobs:
           SUPABASE_URL: http://127.0.0.1:9
           SUPABASE_SERVICE_ROLE_KEY: teste
           SUPABASE_ANON_KEY: teste
+          # Valores fictícios: o SignDoc e o banco são simulados nos testes (fake_backend.ts).
+          SIGNDOC_API_KEY: teste
+          SIGNDOC_WEBHOOK_TOKEN: token-de-teste
         run: |
           cp -R supabase "$RUNNER_TEMP/supabase"
           cd "$RUNNER_TEMP/supabase"
