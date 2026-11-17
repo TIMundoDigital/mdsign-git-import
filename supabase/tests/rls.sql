@@ -215,6 +215,22 @@ do $$ begin
   assert false, 'o mesmo CPF não pode estar em duas contas';
 exception when unique_violation then null;
 end $$;
+-- Perfis: colega de organização não lê CPF nem telefone; cada um lê o próprio.
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-00000000000b","role":"authenticated"}', true);
+set local role authenticated;
+do $$ begin
+  assert public.is_org_member((select v from t_ids where k = 'orgA')), 'Bruno é colega da Ana na Empresa A';
+  assert not exists (select 1 from public.profiles where id = '00000000-0000-0000-0000-00000000000a'), 'colega não lê o perfil (CPF) da Ana';
+  assert (select count(*) from public.profiles) = 1, 'Bruno lê só o próprio perfil';
+  assert (select count(*) from public.list_members((select v from t_ids where k = 'orgA'))) = 3, 'a lista de membros continua com os 3';
+end $$;
+reset role;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-00000000000a","role":"authenticated"}', true);
+set local role authenticated;
+do $$ begin
+  assert (select cpf from public.profiles where id = '00000000-0000-0000-0000-00000000000a') = '81976153069', 'Ana lê o próprio CPF';
+end $$;
+reset role;
 
 -- Bloco 6: planos e consumo
 do $$ begin
