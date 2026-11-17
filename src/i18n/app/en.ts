@@ -1368,6 +1368,8 @@ const en: AppMessages = {
       "Your plan does not allow more users. Choose a bigger plan in Organization → Plan and billing.",
     subscription_inactive:
       "The account is suspended because of a pending payment, or was closed, so new documents are blocked. To settle the payment, go to Organization → Plan and billing. Your documents, history and users remain preserved.",
+    plan_users_over_limit:
+      "The organization has more active users than the chosen plan allows. Suspend or remove users in Organization → Members and try again. Nothing is deleted.",
     feature_not_in_plan:
       "This feature is not part of your organization's plan. See the plans in Organization → Plan and billing.",
     invalid_participants: "Check the highlighted participants.",

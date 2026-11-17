@@ -1829,4 +1829,78 @@ do $$ begin
 end $$;
 reset role;
 
+-- Limite de usuários (P1-2): também ao aceitar convite, ao reativar membro e na troca de plano.
+insert into auth.users (id, email, aud, role, email_confirmed_at, raw_user_meta_data) values
+  ('00000000-0000-0000-0000-00000000007a', 'dono.limite@teste.mdsign', 'authenticated', 'authenticated', now(), '{"full_name":"Dono Limite"}'),
+  ('00000000-0000-0000-0000-00000000007b', 'eva.limite@teste.mdsign', 'authenticated', 'authenticated', now(), '{"full_name":"Eva Limite"}');
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-00000000007a","role":"authenticated"}', true);
+set local role authenticated;
+insert into t_ids values ('orgLim', public.create_organization('Empresa Limite'));
+reset role;
+-- Convite gravado como se feito quando havia vaga (o Cedro permite 1 usuário: o dono).
+with i as (
+  insert into public.invitations (organization_id, email, role, invited_by)
+    values ((select v from t_ids where k = 'orgLim'), 'eva.limite@teste.mdsign', 'member',
+            '00000000-0000-0000-0000-00000000007a')
+    returning token)
+insert into t_ids select 'invLim', token from i;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-00000000007b","role":"authenticated"}', true);
+set local role authenticated;
+do $$ begin
+  begin
+    perform public.accept_invitation((select v from t_ids where k = 'invLim'));
+    assert false, 'aceite acima do limite do plano deve ser recusado';
+  exception when others then
+    if sqlerrm <> 'plan_users_limit' then raise; end if;
+  end;
+end $$;
+reset role;
+do $$ begin
+  assert not exists (select 1 from public.memberships where organization_id = (select v from t_ids where k = 'orgLim')
+    and user_id = '00000000-0000-0000-0000-00000000007b'), 'Eva não entrou';
+end $$;
+-- Plano com mais vagas: o mesmo convite passa a valer.
+update public.subscriptions set plan_id = 'angico' where organization_id = (select v from t_ids where k = 'orgLim');
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-00000000007b","role":"authenticated"}', true);
+set local role authenticated;
+select public.accept_invitation((select v from t_ids where k = 'invLim'));
+reset role;
+do $$
+declare org uuid := (select v from t_ids where k = 'orgLim'); fit jsonb;
+begin
+  assert public.org_active_members(org) = 2, 'com vaga, Eva entra';
+  -- Troca para um plano menor: não cabe enquanto houver 2 ativos.
+  fit := public.plan_users_fit(org, 'cedro');
+  assert not (fit->>'fits')::boolean and (fit->>'active')::int = 2 and (fit->>'max')::int = 1,
+    'Cedro não comporta 2 usuários ativos';
+  assert (public.plan_users_fit(org, 'angico')->>'fits')::boolean, 'Angico comporta';
+end $$;
+-- Reativar membro suspenso também ocupa vaga.
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-00000000007a","role":"authenticated"}', true);
+set local role authenticated;
+select public.update_member((select v from t_ids where k = 'orgLim'), '00000000-0000-0000-0000-00000000007b', null, 'suspended');
+reset role;
+update public.subscriptions set plan_id = 'cedro' where organization_id = (select v from t_ids where k = 'orgLim');
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-00000000007a","role":"authenticated"}', true);
+set local role authenticated;
+do $$ begin
+  begin
+    perform public.update_member((select v from t_ids where k = 'orgLim'), '00000000-0000-0000-0000-00000000007b', null, 'active');
+    assert false, 'reativar acima do limite deve ser recusado';
+  exception when others then
+    if sqlerrm <> 'plan_users_limit' then raise; end if;
+  end;
+  -- Funções internas do limite ficam fechadas ao usuário.
+  begin
+    perform public.plan_users_fit((select v from t_ids where k = 'orgLim'), 'ipe');
+    raise exception 'FALHOU: usuário consultou plan_users_fit';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+reset role;
+do $$ begin
+  assert (select status from public.memberships where organization_id = (select v from t_ids where k = 'orgLim')
+    and user_id = '00000000-0000-0000-0000-00000000007b') = 'suspended', 'Eva continua suspensa';
+end $$;
+
 select 'todos os testes de RLS e permissões passaram' as resultado;

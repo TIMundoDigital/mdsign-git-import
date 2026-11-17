@@ -209,6 +209,15 @@ Deno.serve(async (req) => {
         .single();
       if (sub && sub.plan_id === plan.id && sub.asaas_subscription_id && !sub.cancel_at)
         throw new AppError("billing_same_plan", 409);
+      // Plano menor: os usuários ativos precisam caber nele antes da troca (suspender ou remover
+      // em Organização → Membros). Nada é apagado nem suspenso automaticamente.
+      const { data: fit } = await admin.rpc("plan_users_fit", {
+        org: organizationId,
+        target_plan: plan.id,
+      });
+      const users = fit as { fits: boolean; active: number; max: number | null } | null;
+      if (users && !users.fits)
+        throw new AppError("plan_users_over_limit", 409, { active: users.active, max: users.max });
 
       // Checkout pendente recente do mesmo plano: devolve o mesmo link (sem duplicar).
       const { data: pending } = await admin

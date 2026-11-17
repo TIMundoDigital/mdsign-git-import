@@ -427,3 +427,63 @@ Deno.test("Asaas: suspensa há mais de 30 dias volta ao Cedro e para de cobrar",
     fake.restore();
   }
 });
+
+// ---------- Troca de plano (checkout) ----------
+
+const billingFn = await handlerOf("../functions/billing/index.ts");
+
+Deno.test("checkout: plano menor que os usuários ativos é recusado antes do Asaas", async () => {
+  const asaasCalls: string[] = [];
+  const fake = installFakeBackend({
+    users: { "token-dono": { id: "u-dono", email: "dono@ex.com" } },
+    tables: {
+      profiles: [{ id: "u-dono", full_name: "Dono", cpf: null, no_cpf: false, locale: "pt" }],
+      subscriptions: [
+        {
+          organization_id: ORG,
+          plan_id: "ipe",
+          provider: "asaas",
+          asaas_subscription_id: "sub_1",
+          cancel_at: null,
+        },
+      ],
+      billing_checkouts: [],
+    },
+    rpc: {
+      has_org_permission: () => true,
+      plan_offer: () => ({
+        plans: [
+          { id: "jacaranda", name: "Jacarandá", price_cents: 3990, is_public: true },
+          { id: "ipe", name: "Ipê", price_cents: 9997, is_public: true },
+        ],
+      }),
+      plan_users_fit: (a) =>
+        a["target_plan"] === "jacaranda"
+          ? { fits: false, active: 3, max: 1 }
+          : { fits: true, active: 3, max: 4 },
+    },
+    http: (req, url) => {
+      if (!url.host.includes("asaas.com")) return undefined;
+      asaasCalls.push(`${req.method} ${url.pathname}`);
+      return Response.json({});
+    },
+  });
+  try {
+    const r = await billingFn(
+      new Request("http://local/billing", {
+        method: "POST",
+        headers: { authorization: "Bearer token-dono", "content-type": "application/json" },
+        body: JSON.stringify({ action: "checkout", organizationId: ORG, planId: "jacaranda" }),
+      }),
+    );
+    assertEquals(r.status, 409);
+    assertEquals(await r.json(), {
+      error: "plan_users_over_limit",
+      details: { active: 3, max: 1 },
+    });
+    assertEquals(asaasCalls, [], "nada foi criado no Asaas");
+    assertEquals(fake.tables["billing_checkouts"], [], "nenhum pedido gravado");
+  } finally {
+    fake.restore();
+  }
+});
