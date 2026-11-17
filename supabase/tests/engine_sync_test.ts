@@ -268,3 +268,28 @@ Deno.test("evento do motor: exclusão no painel cancela o pendente na hora", asy
     fake.restore();
   }
 });
+
+Deno.test("webhook do motor: no Supabase, responde antes de consultar o motor", async () => {
+  const fake = scenario();
+  let pending: Promise<unknown> | null = null;
+  (globalThis as { EdgeRuntime?: unknown }).EdgeRuntime = {
+    waitUntil: (p: Promise<unknown>) => (pending = p),
+  };
+  try {
+    const r = await webhook(
+      new Request("http://local/signdoc-webhook", {
+        method: "POST",
+        headers: { authorization: `Bearer ${TOKEN}` },
+        body: JSON.stringify({ type: "DocumentSigned", data: { id: ENGINE_ID, updateDate: "x" } }),
+      }),
+    );
+    assertEquals(r.status, 200);
+    assert(pending, "processamento ficou para depois da resposta");
+    await pending;
+    assert(fake.tables["engine_webhook_events"]![0]!["processed_at"], "processado em seguida");
+    assertEquals(person(fake, "p-ana")["status"], "completed");
+  } finally {
+    delete (globalThis as { EdgeRuntime?: unknown }).EdgeRuntime;
+    fake.restore();
+  }
+});

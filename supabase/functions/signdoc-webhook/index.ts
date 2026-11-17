@@ -2,6 +2,7 @@
 // responder rápido, deduplicar, e tratar o payload como aviso — o estado vem da API (syncDocument).
 
 import { admin } from "../_shared/auth.ts";
+import { inBackground } from "../_shared/background.ts";
 import { processEngineEvent } from "../_shared/engine-events.ts";
 import { safeEqual } from "../_shared/net.ts";
 
@@ -42,11 +43,15 @@ Deno.serve(async (req) => {
   if (error?.code === "23505") return new Response(null, { status: 200 });
   if (error || !row) return new Response(null, { status: 500 });
 
-  await processEngineEvent({
-    id: row.id,
-    type,
-    payload: payload as Record<string, unknown>,
-    attempts: 0,
-  });
+  // Responde logo (regra da Lacuna) e processa em seguida: a consulta ao motor não segura a
+  // resposta. Se falhar, o evento fica gravado e a rotina de minuto tenta de novo.
+  await inBackground(
+    processEngineEvent({
+      id: row.id,
+      type,
+      payload: payload as Record<string, unknown>,
+      attempts: 0,
+    }),
+  );
   return new Response(null, { status: 200 });
 });
