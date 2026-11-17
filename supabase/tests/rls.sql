@@ -1782,4 +1782,51 @@ begin
 end $$;
 reset role;
 
+-- Filas com reserva: o que uma execução reservou, outra não pega (sem envio em dobro). Usuário
+-- comum não chama as funções de reserva.
+insert into public.engine_webhook_events (dedupe_key, type, payload, received_at)
+  values ('teste-fila-1', 'DocumentConcluded', '{}', now() - interval '10 minutes'),
+         ('teste-fila-2', 'DocumentConcluded', '{}', now() - interval '10 minutes'),
+         ('teste-fila-novo', 'DocumentConcluded', '{}', now());
+do $$
+declare first_run bigint[]; second_run bigint[];
+begin
+  first_run := array(select public.claim_engine_events(200, 5));
+  second_run := array(select public.claim_engine_events(200, 5));
+  assert (select count(*) from public.engine_webhook_events
+          where dedupe_key like 'teste-fila-%' and id = any(first_run)) = 2,
+    'a 1ª execução reserva os 2 eventos vencidos (o recém-chegado espera 1 minuto)';
+  assert not exists (select 1 from public.engine_webhook_events
+                     where dedupe_key like 'teste-fila-%' and id = any(second_run)),
+    'a 2ª execução ao mesmo tempo não pega os já reservados';
+  -- Liberados ao fim da execução, voltam para a fila.
+  update public.engine_webhook_events set locked_until = null where dedupe_key like 'teste-fila-%';
+  assert (select count(*) from public.engine_webhook_events
+          where dedupe_key like 'teste-fila-%'
+            and id = any(array(select public.claim_engine_events(200, 5)))) = 2,
+    'liberados, voltam a ser reservados';
+  -- Reserva vencida (execução que caiu no meio) também volta.
+  update public.engine_webhook_events set locked_until = now() - interval '1 second'
+    where dedupe_key like 'teste-fila-%';
+  assert (select count(*) from public.engine_webhook_events
+          where dedupe_key like 'teste-fila-%'
+            and id = any(array(select public.claim_engine_events(200, 5)))) = 2,
+    'reserva vencida volta para a fila';
+end $$;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-00000000000a","role":"authenticated"}', true);
+set local role authenticated;
+do $$ begin
+  begin
+    perform public.claim_notifications(10);
+    raise exception 'FALHOU: usuário reservou notificações';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.claim_webhook_deliveries(10);
+    raise exception 'FALHOU: usuário reservou entregas de webhook';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+reset role;
+
 select 'todos os testes de RLS e permissões passaram' as resultado;

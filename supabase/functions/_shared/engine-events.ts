@@ -53,27 +53,33 @@ export async function processEngineEvent(row: EventRow) {
 
 /** Reprocessa eventos pendentes (chamado pela rotina de minuto). */
 export async function processPendingEngineEvents(limit = 20) {
-  const now = new Date();
+  // Reserva no banco os eventos vencidos (nova tentativa vencida ou recebidos há mais de 1 minuto,
+  // tempo em que o próprio webhook ainda está processando). Outra execução ao mesmo tempo pula
+  // estes: o mesmo evento não é tratado duas vezes.
+  const { data: claimed } = await admin.rpc("claim_engine_events", {
+    lim: limit,
+    max_attempts: MAX_ATTEMPTS,
+  });
+  const ids = (claimed as number[] | null) ?? [];
+  if (!ids.length) return { reprocessed: 0, failed: 0 };
   const { data } = await admin
     .from("engine_webhook_events")
     .select("id, type, payload, attempts, next_attempt_at, received_at")
-    .is("processed_at", null)
-    .lt("attempts", MAX_ATTEMPTS)
-    .order("received_at")
-    .limit(limit * 3);
+    .in("id", ids)
+    .order("received_at");
   let ok = 0;
   let failed = 0;
-  // Evento recém-chegado ainda está sendo processado pelo próprio webhook: espera 1 minuto.
-  const due = (data ?? [])
-    .filter((r) =>
-      r.next_attempt_at
-        ? new Date(r.next_attempt_at) <= now
-        : new Date(r.received_at).getTime() < now.getTime() - 60_000,
-    )
-    .slice(0, limit);
-  for (const row of due) {
-    if (await processEngineEvent(row as EventRow)) ok++;
-    else failed++;
+  try {
+    for (const row of data ?? []) {
+      if (await processEngineEvent(row as EventRow)) ok++;
+      else failed++;
+    }
+  } finally {
+    await admin
+      .from("engine_webhook_events")
+      .update({ locked_until: null })
+      .in("id", ids)
+      .is("processed_at", null);
   }
   return { reprocessed: ok, failed };
 }

@@ -51,14 +51,32 @@ export async function createSignLink(p: {
     .replace(/\+/g, "-")
     .replace(/\//g, "_")
     .replace(/=+$/, "");
-  await admin.from("sign_links").insert({
-    organization_id: p.organizationId,
-    document_id: p.documentId,
-    participant_id: p.participantId,
-    token_hash: await sha256(token),
-    expires_at: new Date(Date.now() + LINK_DAYS * 86400000).toISOString(),
-  });
-  return `${siteUrl()}/s/${token}`;
+  const { data } = await admin
+    .from("sign_links")
+    .insert({
+      organization_id: p.organizationId,
+      document_id: p.documentId,
+      participant_id: p.participantId,
+      token_hash: await sha256(token),
+      expires_at: new Date(Date.now() + LINK_DAYS * 86400000).toISOString(),
+    })
+    .select("id")
+    .single();
+  return { url: `${siteUrl()}/s/${token}`, id: (data?.id as string | undefined) ?? null };
+}
+
+/** Link criado para uma mensagem que não chegou à pessoa: não deve continuar valendo. */
+async function revokeSignLink(id: string | null | undefined) {
+  if (!id) return;
+  await admin
+    .from("sign_links")
+    .update({ revoked_at: new Date().toISOString() })
+    .eq("id", id)
+    .is("revoked_at", null)
+    .then(
+      () => undefined,
+      () => undefined,
+    );
 }
 
 export const hashToken = sha256;
@@ -253,17 +271,61 @@ export async function sendBotConversa(phone: string, name: string, text: string)
 /** Processa a fila (chamado a cada minuto pelo agendador). */
 export async function processNotifications(limit = 30) {
   const out = { sent: 0, failed: 0, skipped: 0, blocked: 0 };
+  // Reserva os itens (outra execução ao mesmo tempo pula estes): evita mensagem em dobro.
+  const { data: claimed } = await admin.rpc("claim_notifications", { lim: limit });
+  const ids = (claimed as string[] | null) ?? [];
+  if (!ids.length) return out;
   const { data: queue } = await admin
     .from("notifications")
     .select(
       "id, organization_id, document_id, participant_id, channel, kind, attempts, document_participants (id, name, email, phone, role, status), documents (name, status, origin, created_by, message, email_locale, organizations (name))",
     )
-    .eq("status", "pending")
-    .lte("scheduled_at", new Date().toISOString())
-    .order("scheduled_at")
-    .limit(limit);
-  if (!queue?.length) return out;
+    .in("id", ids)
+    .order("scheduled_at");
+  try {
+    await sendQueue((queue ?? []) as unknown as QueueItem[], out);
+  } finally {
+    // Libera o que continuou pendente (nova tentativa agendada ou ritmo atingido).
+    await admin
+      .from("notifications")
+      .update({ locked_until: null })
+      .in("id", ids)
+      .eq("status", "pending");
+  }
+  return out;
+}
 
+type QueueItem = {
+  id: string;
+  organization_id: string;
+  document_id: string;
+  participant_id: string;
+  channel: "whatsapp" | "email";
+  kind: Kind;
+  attempts: number;
+  document_participants: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string | null;
+    role: string;
+    status: string;
+  } | null;
+  documents: {
+    name: string;
+    status: string;
+    origin: string | null;
+    created_by: string | null;
+    message: string | null;
+    email_locale: string;
+    organizations: { name: string } | null;
+  } | null;
+};
+
+async function sendQueue(
+  queue: QueueItem[],
+  out: { sent: number; failed: number; skipped: number; blocked: number },
+) {
   const { data: rates } = await admin
     .from("policies")
     .select("id, config, active")
@@ -286,32 +348,7 @@ export async function processNotifications(limit = 30) {
   let emailToday: number | null = null;
   const senderNames = new Map<string, string>();
 
-  for (const n of queue as unknown as {
-    id: string;
-    organization_id: string;
-    document_id: string;
-    participant_id: string;
-    channel: "whatsapp" | "email";
-    kind: Kind;
-    attempts: number;
-    document_participants: {
-      id: string;
-      name: string;
-      email: string;
-      phone: string | null;
-      role: string;
-      status: string;
-    } | null;
-    documents: {
-      name: string;
-      status: string;
-      origin: string | null;
-      created_by: string | null;
-      message: string | null;
-      email_locale: string;
-      organizations: { name: string } | null;
-    } | null;
-  }[]) {
+  for (const n of queue) {
     const provider = n.channel === "email" ? "resend" : "botconversa";
     const finish = async (
       status: string,
@@ -357,6 +394,20 @@ export async function processNotifications(limit = 30) {
       // Ritmo: deixa para a próxima rodada (sem gastar tentativa).
       if (emailThisRun >= emailPerRun || emailToday >= emailPerDay) continue;
       const d = n.documents!;
+      let signLink: { url: string; id: string | null } | null = null;
+      const recordSent = async (messageId: string | null) => {
+        await finish("sent", null, messageId);
+        emailThisRun++;
+        emailToday = (emailToday ?? 0) + 1;
+        await admin.from("document_events").insert({
+          document_id: n.document_id,
+          organization_id: n.organization_id,
+          type: "notification.sent",
+          actor_name: p.name,
+          source: "mdsign",
+          data: { channel: "email", kind: n.kind, notification: n.id },
+        });
+      };
       try {
         // Link público e API não têm uma pessoa remetente: o e-mail cita só a organização.
         let sender = "";
@@ -371,7 +422,7 @@ export async function processNotifications(limit = 30) {
           }
           sender = senderNames.get(d.created_by) ?? "";
         }
-        const link = await createSignLink({
+        signLink = await createSignLink({
           organizationId: n.organization_id,
           documentId: n.document_id,
           participantId: p.id,
@@ -385,25 +436,24 @@ export async function processNotifications(limit = 30) {
           orgName: d.organizations?.name ?? "MDSign",
           docName: d.name,
           message: n.kind === "reminder" ? null : d.message,
-          link,
+          link: signLink.url,
         });
         const id = await sendEmail({ to: p.email, ...mail, idempotencyKey: n.id });
-        await finish("sent", null, id);
-        emailThisRun++;
-        emailToday++;
-        await admin.from("document_events").insert({
-          document_id: n.document_id,
-          organization_id: n.organization_id,
-          type: "notification.sent",
-          actor_name: p.name,
-          source: "mdsign",
-          data: { channel: "email", kind: n.kind, notification: n.id },
-        });
+        await recordSent(id);
       } catch (e) {
+        // 409: o Resend já aceitou esta notificação numa tentativa anterior (a resposta se perdeu)
+        // e recusa a repetição com outro conteúdo. A pessoa recebeu o primeiro e-mail, com o link
+        // daquela tentativa: conta como enviado e revoga o link desta, que não foi entregue.
+        if (/resend_409/.test(String(e))) {
+          await revokeSignLink(signLink?.id);
+          await recordSent(null);
+          continue;
+        }
         // Recusa definitiva do provedor (403/422: remetente de teste, endereço inválido): tentar
         // de novo não adianta; registra o motivo na hora para aparecer na lista de participantes.
         const permanent = /resend_(403|422)/.test(String(e));
         if (permanent) {
+          await revokeSignLink(signLink?.id);
           await finish("failed", emailTestMode() ? "test_sender" : "provider_rejected");
           continue;
         }
@@ -454,7 +504,7 @@ export async function processNotifications(limit = 30) {
     if (thisRun >= perRun || (sentToday.get(n.organization_id) ?? 0) >= perDay) continue;
 
     try {
-      const link = await createSignLink({
+      const { url: link } = await createSignLink({
         organizationId: n.organization_id,
         documentId: n.document_id,
         participantId: p.id,
@@ -491,7 +541,6 @@ export async function processNotifications(limit = 30) {
       else await finish("failed", String(e).slice(0, 200));
     }
   }
-  return out;
 }
 
 /** Descadastro ("SAIR"): vale para as organizações que já notificaram este número. */

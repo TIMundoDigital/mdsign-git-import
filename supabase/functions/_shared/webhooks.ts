@@ -87,17 +87,33 @@ export async function deliver(d: Due) {
 
 /** Entrega o que estiver pendente e vencido (agendador ou logo após um evento). */
 export async function deliverDue(limit = 50, organizationId?: string) {
-  let q = admin
+  // Reserva as entregas (outra execução ao mesmo tempo pula estas): evita aviso em dobro.
+  const { data: claimed } = await admin.rpc("claim_webhook_deliveries", {
+    lim: limit,
+    org: organizationId ?? null,
+  });
+  const ids = (claimed as string[] | null) ?? [];
+  if (!ids.length) return { processed: 0, delivered: 0 };
+  const { data } = await admin
     .from("webhook_deliveries")
     .select(
       "id, organization_id, event_type, payload, attempts, webhook_endpoints (url, secret, active)",
     )
-    .eq("status", "pending")
-    .lte("next_attempt_at", new Date().toISOString())
-    .order("next_attempt_at")
-    .limit(limit);
-  if (organizationId) q = q.eq("organization_id", organizationId);
-  const { data } = await q;
+    .in("id", ids)
+    .order("next_attempt_at");
+  try {
+    return await deliverClaimed(data);
+  } finally {
+    // Libera o que continuou pendente (nova tentativa agendada).
+    await admin
+      .from("webhook_deliveries")
+      .update({ locked_until: null })
+      .in("id", ids)
+      .eq("status", "pending");
+  }
+}
+
+async function deliverClaimed(data: unknown[] | null) {
   let sent = 0;
   // Sem Integrações no plano (exclusivo do Mogno): a entrega falha sem novas tentativas.
   const allowed = new Map<string, boolean>();
