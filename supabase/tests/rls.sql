@@ -169,6 +169,34 @@ do $$ begin
   assert (select role from public.memberships where user_id = '00000000-0000-0000-0000-00000000000b' and organization_id = (select v from t_ids where k = 'orgA')) = 'operator', 'Gestora alterou o papel do Bruno';
   assert (select count(*) from public.list_members((select v from t_ids where k = 'orgA'))) = 3, 'proprietária vê os 3 membros';
 end $$;
+-- Cadastro da organização: pela API só nome, CNPJ e idioma. Ciclo de vida, situação e motor só
+-- pelas funções (vale para qualquer papel, inclusive o proprietário e o Administrador).
+update public.organizations set name = 'Empresa A', cnpj = '12345678000190', locale = 'pt'
+  where id = (select v from t_ids where k = 'orgA');
+do $$
+declare col text;
+begin
+  foreach col in array array['closed_at', 'export_until', 'purge_after', 'purged_at'] loop
+    begin
+      execute format('update public.organizations set %I = now() - interval ''1 day'' where id = $1', col)
+        using (select v from t_ids where k = 'orgA');
+      assert false, format('%s não pode ser alterado pela API', col);
+    exception when insufficient_privilege then null;
+    end;
+  end loop;
+  begin
+    update public.organizations set status = 'suspended' where id = (select v from t_ids where k = 'orgA');
+    assert false, 'status não pode ser alterado pela API';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    update public.organizations set engine_mode = 'dedicated' where id = (select v from t_ids where k = 'orgA');
+    assert false, 'engine_mode não pode ser alterado pela API';
+  exception when insufficient_privilege then null;
+  end;
+  assert (select export_until is null and purge_after is null and status = 'active'
+          from public.organizations where id = (select v from t_ids where k = 'orgA')), 'organização intacta';
+end $$;
 reset role;
 
 -- Anônimo não vê nada
