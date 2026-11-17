@@ -96,16 +96,42 @@ function matchesOr(row: Row, expr: string): boolean {
     });
 }
 
-function project(row: Row, select: string | null): Row {
+/** Divide o select no nível de cima, respeitando parênteses de tabelas embutidas. */
+function splitSelect(select: string): string[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let cur = "";
+  for (const ch of select) {
+    if (ch === "(") depth++;
+    if (ch === ")") depth--;
+    if (ch === "," && depth === 0) {
+      parts.push(cur.trim());
+      cur = "";
+    } else cur += ch;
+  }
+  if (cur.trim()) parts.push(cur.trim());
+  return parts;
+}
+
+/**
+ * Colunas simples e tabelas embutidas "muitos-para-um" (ex.: organizations(name, locale)),
+ * ligadas pela coluna <tabela no singular>_id do registro.
+ */
+function project(row: Row, select: string | null, tables: Record<string, Row[]>): Row {
   if (!select || select === "*") return { ...row };
-  if (select.includes("("))
-    throw new Error(`fake_backend: select embutido não suportado: ${select}`);
   const out: Row = {};
-  for (const c of select
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean))
-    out[c] = row[c];
+  for (const part of splitSelect(select)) {
+    const embed = /^(\w+)\s*\((.*)\)$/s.exec(part);
+    if (!embed) {
+      out[part] = row[part];
+      continue;
+    }
+    const [, rel, cols] = embed;
+    const fk = `${rel!.replace(/s$/, "")}_id`;
+    if (!(fk in row)) throw new Error(`fake_backend: embutido sem ${fk}: ${part}`);
+    const target = (tables[rel!] ?? []).find((r) => r["id"] === row[fk]);
+    out[rel!] = target ? project(target, cols!, tables) : null;
+  }
   return out;
 }
 
@@ -126,7 +152,7 @@ export function installFakeBackend(opts: {
   /** Usuários logados, pelo token (GET /auth/v1/user do Supabase Auth). */
   users?: Record<string, { id: string; email: string }>;
   /** Outros serviços (ex.: Asaas): devolve a resposta ou undefined se não for com ele. */
-  http?: (req: Request, url: URL) => Response | Promise<Response> | undefined;
+  http?: (req: Request, url: URL) => Response | undefined | Promise<Response | undefined>;
 }): FakeBackend {
   const tables: Record<string, Row[]> = structuredClone(opts.tables ?? {});
   const unique = opts.unique ?? {};
@@ -196,7 +222,7 @@ export function installFakeBackend(opts: {
     const select = params.get("select");
 
     const reply = (rows: Row[], status = 200) => {
-      const projected = rows.map((r) => project(r, select));
+      const projected = rows.map((r) => project(r, select, tables));
       if (wantsObject) {
         if (projected.length !== 1)
           return json(

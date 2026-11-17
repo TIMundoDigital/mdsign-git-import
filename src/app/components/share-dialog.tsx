@@ -1,7 +1,8 @@
-// Enviar cópia do documento concluído para e-mails de fora do fluxo (link próprio, 7 dias).
+// Enviar cópia do documento concluído para e-mails de fora do fluxo (link próprio, 7 dias),
+// e ver/revogar as cópias já enviadas.
 
-import { useState } from "react";
-import { Loader2, Send } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Ban, Loader2, Send } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@/lib/supabase";
 import { callFunction } from "../api";
+import { formatDate } from "../documents";
 import { errorText } from "../errors";
 import { useAppI18n } from "../i18n";
 
@@ -31,6 +34,15 @@ export function parseEmails(raw: string) {
   ];
 }
 
+type ShareRow = {
+  id: string;
+  email: string;
+  created_at: string;
+  expires_at: string;
+  opened_at: string | null;
+  revoked_at: string | null;
+};
+
 export function ShareDialog({
   documentId,
   onClose,
@@ -40,8 +52,36 @@ export function ShareDialog({
   onClose: () => void;
   onSent: () => void;
 }) {
-  const { t, f } = useAppI18n();
+  const { t, f, locale } = useAppI18n();
   const s = t.share;
+  const [shares, setShares] = useState<ShareRow[]>([]);
+  const [revoking, setRevoking] = useState<string | null>(null);
+  const loadShares = useCallback(async () => {
+    const { data } = await supabase
+      .from("document_shares")
+      .select("id, email, created_at, expires_at, opened_at, revoked_at")
+      .eq("document_id", documentId)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    setShares((data as ShareRow[] | null) ?? []);
+  }, [documentId]);
+  useEffect(() => {
+    void loadShares();
+  }, [loadShares]);
+
+  async function revoke(id: string) {
+    setRevoking(id);
+    setError(null);
+    try {
+      await callFunction("document-share", { action: "revoke", shareId: id });
+      toast.success(s.revoked);
+      await loadShares();
+    } catch (e) {
+      setError(errorText(t, e));
+    } finally {
+      setRevoking(null);
+    }
+  }
   const [raw, setRaw] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -97,6 +137,55 @@ export function ShareDialog({
             disabled={busy}
           />
         </label>
+        {shares.length > 0 && (
+          <section className="grid gap-2" aria-labelledby="share-history">
+            <h3 id="share-history" className="text-sm font-medium">
+              {s.history}
+            </h3>
+            <ul className="grid max-h-48 gap-1 overflow-y-auto text-sm">
+              {shares.map((r) => {
+                const expired = new Date(r.expires_at).getTime() < Date.now();
+                const state = r.revoked_at
+                  ? s.stateRevoked
+                  : expired
+                    ? s.stateExpired
+                    : r.opened_at
+                      ? s.stateOpened
+                      : s.stateActive;
+                const active = !r.revoked_at && !expired;
+                return (
+                  <li
+                    key={r.id}
+                    className="flex items-center justify-between gap-2 rounded-md border px-2 py-1.5"
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate">{r.email}</span>
+                      <span className="block text-xs text-muted-foreground">
+                        {state} · {f(s.until, { date: formatDate(r.expires_at, locale) })}
+                      </span>
+                    </span>
+                    {active && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => void revoke(r.id)}
+                        disabled={revoking !== null}
+                        aria-label={f(s.revokeFor, { email: r.email })}
+                      >
+                        {revoking === r.id ? (
+                          <Loader2 className="animate-spin" aria-hidden />
+                        ) : (
+                          <Ban aria-hidden />
+                        )}
+                        {s.revoke}
+                      </Button>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
         {error && (
           <p className="text-sm text-destructive" role="alert">
             {error}

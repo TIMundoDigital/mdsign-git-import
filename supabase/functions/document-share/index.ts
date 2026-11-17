@@ -3,6 +3,9 @@
 //   pessoa, válido por 7 dias. O e-mail sai pelo MDSign (Resend).
 // - "open" (público, pelo link): confere o token e devolve um link curto do motor para baixar o
 //   PDF assinado. Nada do arquivo fica guardado no MDSign.
+// - "revoke" (logado, mesmas permissões do envio): o link deixa de abrir na hora.
+// No Cedro, a cópia segue o prazo do documento (6 meses a partir da criação): não é enviada
+// depois dele, o link não passa dele e não abre depois dele.
 
 import { admin, requireUser } from "../_shared/auth.ts";
 import { emailConfigured, emailTestMode, sendEmail, shareEmail } from "../_shared/email.ts";
@@ -16,8 +19,21 @@ const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 const randomToken = () => {
   const b = crypto.getRandomValues(new Uint8Array(24));
-  return btoa(String.fromCharCode(...b)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  return btoa(String.fromCharCode(...b))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
 };
+/** Fim da disponibilidade do documento no plano (Cedro: 6 meses); null = sem prazo. */
+async function availableUntil(documentId: string): Promise<Date | null> {
+  const { data } = await admin.rpc("document_available_until", { doc: documentId });
+  return data ? new Date(data as string) : null;
+}
+const expiredInPlan = async (documentId: string) => {
+  const until = await availableUntil(documentId);
+  return Boolean(until && until.getTime() < Date.now());
+};
+
 const mask = (email: string) => {
   const [local = "", domain = ""] = email.split("@");
   return `${local.slice(0, 2)}***@${domain}`;
@@ -35,17 +51,22 @@ Deno.serve(async (req) => {
       if (!/^[A-Za-z0-9_-]{20,64}$/.test(token)) throw new AppError("link_invalid", 404);
       const { data: share } = await admin
         .from("document_shares")
-        .select("id, document_id, organization_id, email, expires_at, revoked_at, opened_at, open_count")
+        .select(
+          "id, document_id, organization_id, email, expires_at, revoked_at, opened_at, open_count",
+        )
         .eq("token_hash", await hashToken(token))
         .maybeSingle();
       if (!share || share.revoked_at) throw new AppError("link_invalid", 404);
-      if (new Date(share.expires_at).getTime() < Date.now()) throw new AppError("link_expired", 410);
+      if (new Date(share.expires_at).getTime() < Date.now())
+        throw new AppError("link_expired", 410);
       const { data: doc } = await admin
         .from("documents")
         .select("name, status, engine_document_id, deleted_at, organizations(name)")
         .eq("id", share.document_id)
         .single();
-      if (!doc || doc.deleted_at || doc.status !== "concluded") throw new AppError("link_invalid", 404);
+      if (!doc || doc.deleted_at || doc.status !== "concluded")
+        throw new AppError("link_invalid", 404);
+      if (await expiredInPlan(share.document_id)) throw new AppError("link_expired", 410);
       const ticket = await signdoc.ticket(doc.engine_document_id, "Signatures");
       const url = ticket.location.startsWith("http")
         ? ticket.location
@@ -74,8 +95,59 @@ Deno.serve(async (req) => {
       return json({ url, name: doc.name, organization: org }, 200, origin);
     }
 
-    // ---- Enviar cópias ----
     const caller = await requireUser(req);
+
+    // ---- Revogar uma cópia enviada ----
+    if (body["action"] === "revoke") {
+      const shareId = String(body["shareId"] ?? "");
+      if (!/^[0-9a-f-]{36}$/i.test(shareId)) throw new AppError("invalid_request");
+      const { data: share } = await admin
+        .from("document_shares")
+        .select("id, document_id, organization_id, email, revoked_at")
+        .eq("id", shareId)
+        .maybeSingle();
+      if (!share) throw new AppError("link_invalid", 404);
+      // Mesma regra do envio: quem vê o documento e (criou ou gerencia documentos).
+      const { data: owner } = await caller.asUser
+        .from("documents")
+        .select("id, created_by, organization_id")
+        .eq("id", share.document_id)
+        .maybeSingle();
+      if (!owner) throw new AppError("document_not_found", 404);
+      const { data: canManage } = await caller.asUser.rpc("has_org_permission", {
+        org: owner.organization_id,
+        perm: "documents.manage",
+      });
+      if (owner.created_by !== caller.user.id && !canManage) throw new AppError("forbidden", 403);
+      if (share.revoked_at) return json({ revoked: true }, 200, origin);
+      const { data: changed } = await admin
+        .from("document_shares")
+        .update({ revoked_at: new Date().toISOString() })
+        .eq("id", share.id)
+        .is("revoked_at", null)
+        .select("id");
+      if (changed?.length) {
+        await admin.from("document_events").insert({
+          document_id: share.document_id,
+          organization_id: share.organization_id,
+          type: "document.share_revoked",
+          actor_name: caller.profile.full_name ?? caller.user.email ?? null,
+          source: "mdsign",
+          data: { to: mask(share.email) },
+        });
+        await admin.rpc("write_audit_as", {
+          org: share.organization_id,
+          actor: caller.user.id,
+          act: "document.share_revoked",
+          ent: "document",
+          ent_id: share.document_id,
+          payload: { share: share.id },
+        });
+      }
+      return json({ revoked: true }, 200, origin);
+    }
+
+    // ---- Enviar cópias ----
     const documentId = String(body["documentId"] ?? "");
     const { data: doc } = await caller.asUser
       .from("documents")
@@ -90,6 +162,10 @@ Deno.serve(async (req) => {
     });
     if (doc.created_by !== caller.user.id && !manage) throw new AppError("forbidden", 403);
     if (doc.status !== "concluded") throw new AppError("document_not_concluded", 409);
+    // Cedro: depois do prazo do documento não há cópia; antes dele, o link não passa do prazo.
+    const until = await availableUntil(doc.id);
+    if (until && until.getTime() < Date.now())
+      throw new AppError("cedro_document_expired", 403, { until: until.toISOString() });
     if (!emailConfigured()) throw new AppError("email_not_configured", 503);
 
     const emails = [
@@ -101,9 +177,15 @@ Deno.serve(async (req) => {
     ];
     if (!emails.length || emails.length > MAX_EMAILS || emails.some((e) => !EMAIL.test(e)))
       throw new AppError("invalid_emails", 422, { max: MAX_EMAILS });
-    const message = String(body["message"] ?? "").trim().slice(0, 500);
+    const message = String(body["message"] ?? "")
+      .trim()
+      .slice(0, 500);
     const org = doc.organizations as { name?: string; locale?: string } | null;
-    const expires = new Date(Date.now() + DAYS * 86400000).toISOString();
+    const expires = new Date(
+      Math.min(Date.now() + DAYS * 86400000, until?.getTime() ?? Number.POSITIVE_INFINITY),
+    ).toISOString();
+    // Dias informados no e-mail: os 7 de sempre ou o que falta até o prazo do plano.
+    const days = Math.max(1, Math.ceil((new Date(expires).getTime() - Date.now()) / 86400000));
 
     const sent: string[] = [];
     const failed: string[] = [];
@@ -129,7 +211,7 @@ Deno.serve(async (req) => {
           docName: doc.name,
           message,
           link: `${siteUrl()}/d/${token}`,
-          days: DAYS,
+          days,
           validateUrl: `${siteUrl()}/pt/validar`,
         });
         await sendEmail({ to: email, ...mail, idempotencyKey: `share:${token}` });
@@ -150,7 +232,7 @@ Deno.serve(async (req) => {
         type: "document.shared",
         actor_name: caller.profile.full_name ?? caller.user.email ?? null,
         source: "mdsign",
-        data: { to: sent.map(mask), days: DAYS },
+        data: { to: sent.map(mask), days },
       });
       await admin.rpc("write_audit_as", {
         org: doc.organization_id,
