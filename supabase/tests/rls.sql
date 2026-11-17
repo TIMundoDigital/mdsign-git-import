@@ -1960,4 +1960,31 @@ begin
     and action = 'member.reactivated_by_plan'), 'reativação registrada';
 end $$;
 
+-- Verificação em duas etapas no servidor (P1-11): quem ativou só acessa com a sessão confirmada.
+insert into auth.mfa_factors (id, user_id, friendly_name, factor_type, status, created_at, updated_at)
+  values (gen_random_uuid(), '00000000-0000-0000-0000-00000000007a', 'teste', 'totp', 'verified', now(), now());
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-00000000007a","role":"authenticated","aal":"aal1"}', true);
+set local role authenticated;
+do $$ begin
+  assert not public.is_org_member((select v from t_ids where k = 'orgLim')), 'só a senha não basta para quem ativou';
+  assert public.org_role_of((select v from t_ids where k = 'orgLim')) is null, 'papel não vale sem o código';
+  assert (select count(*) from public.organizations where id = (select v from t_ids where k = 'orgLim')) = 0,
+    'a API não devolve a organização sem o código';
+end $$;
+reset role;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-00000000007a","role":"authenticated","aal":"aal2"}', true);
+set local role authenticated;
+do $$ begin
+  assert public.is_org_member((select v from t_ids where k = 'orgLim')), 'com o código confirmado, acessa';
+  assert public.has_org_permission((select v from t_ids where k = 'orgLim'), 'members.manage'), 'permissões voltam a valer';
+end $$;
+reset role;
+-- Quem não ativou continua como antes.
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-00000000007b","role":"authenticated","aal":"aal1"}', true);
+set local role authenticated;
+do $$ begin
+  assert public.is_org_member((select v from t_ids where k = 'orgLim')), 'sem verificação ativada, nada muda';
+end $$;
+reset role;
+
 select 'todos os testes de RLS e permissões passaram' as resultado;
