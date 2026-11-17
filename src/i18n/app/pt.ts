@@ -90,7 +90,9 @@ const pt = {
   },
   account: {
     exportFirst:
-      'Antes de encerrar, baixe todos os documentos no botão "Baixar todos os documentos (ZIP)" acima. O encerramento fica liberado por 24 horas depois do download completo.',
+      'Recomendamos baixar todos os documentos no botão "Baixar todos os documentos (ZIP)" acima antes de encerrar. Depois do encerramento, você ainda tem 30 dias para baixar.',
+    acknowledge:
+      "Estou ciente de que terei 30 dias para exportar os documentos e comprovantes e de que, no 60º dia, os dados operacionais serão apagados, conforme os Termos de Uso.",
     exportTitle: "Exportar documentos",
     exportText:
       "Baixe todos os {n} documentos da organização em ZIP ({parts} parte(s) de até 25), com os PDFs assinados e uma lista.csv com a situação de cada um.",
@@ -1394,6 +1396,8 @@ const pt = {
       "No plano Cedro, cada documento fica disponível por 6 meses a partir da criação, e este prazo terminou. Nada foi apagado. Para voltar a baixar, escolha um plano em Organização → Plano e cobrança.",
     confirm_name_mismatch: "O nome digitado não confere com o nome da organização.",
     organization_closed: "Esta conta já foi encerrada.",
+    close_acknowledgement_required:
+      "Para encerrar, confirme que está ciente dos prazos de exportação e de eliminação dos dados.",
     export_required:
       "Antes de encerrar, baixe todos os documentos (ZIP) em Organização → Exportar e encerrar.",
     email_not_confirmed:

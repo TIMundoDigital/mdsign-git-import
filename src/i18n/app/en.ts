@@ -92,7 +92,9 @@ const en: AppMessages = {
   },
   account: {
     exportFirst:
-      'Before closing, download all documents with the "Download all documents (ZIP)" button above. Closing is unlocked for 24 hours after the full download.',
+      'We recommend downloading all documents with the "Download all documents (ZIP)" button above before closing. After closing, you still have 30 days to download.',
+    acknowledge:
+      "I understand that I will have 30 days to export the documents and receipts and that, on day 60, operational data will be deleted, as set out in the Terms of Use.",
     exportTitle: "Export documents",
     exportText:
       "Download all {n} of the organization's documents as ZIP ({parts} part(s) of up to 25), with the signed PDFs and a lista.csv with each one's status.",
@@ -1366,6 +1368,8 @@ const en: AppMessages = {
       "On the Cedro plan, each document is available for 6 months from creation, and this period has ended. Nothing was deleted. To download again, choose a plan in Organization → Plan and billing.",
     confirm_name_mismatch: "The name typed does not match the organization name.",
     organization_closed: "This account has already been closed.",
+    close_acknowledgement_required:
+      "To close the account, confirm that you are aware of the export and data deletion deadlines.",
     export_required:
       "Before closing, download all documents (ZIP) in Organization → Export and close.",
     email_not_confirmed:

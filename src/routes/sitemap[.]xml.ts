@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { siteConfig } from "@/config/site";
 import { CAMPAIGN_SLUGS } from "@/content/acquisition";
+import { LEGAL_DRAFT } from "@/content/legal";
 import { htmlLang, localizedPath, locales } from "@/i18n";
 
 /** Páginas indexáveis (sem o idioma); cada uma sai nas três versões. */
@@ -12,6 +13,8 @@ const paths = [
   "/titular",
   "/validar",
   ...CAMPAIGN_SLUGS.map((slug) => `/lp/${slug}`),
+  // Termos, Privacidade e Condições do Cedro: só depois de aprovados (fora da minuta).
+  ...(LEGAL_DRAFT ? [] : ["/termos", "/privacidade", "/condicoes-cedro"]),
 ];
 
 // Sitemap multilíngue: cada URL lista as alternativas por idioma (PRD 27.2).

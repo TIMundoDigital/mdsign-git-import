@@ -277,3 +277,73 @@ ${
   ].join("\n");
   return { subject, html, text };
 }
+
+/**
+ * Aviso ao proprietário: conta suspensa por pagamento pendente (ou estorno) e data em que, sem
+ * regularização, a organização passa ao plano gratuito Cedro (Termos, seção 10: notificação com
+ * antecedência mínima de 15 dias, com oportunidade de regularizar e exportar).
+ */
+export function downgradeNoticeEmail(p: {
+  locale: string;
+  orgName: string;
+  /** Data da mudança para o Cedro, já formatada no idioma (ex.: 02/12/2026). */
+  date: string;
+  /** Página do plano no MDSign (regularizar o pagamento). */
+  planUrl: string;
+}) {
+  const L = {
+    pt: {
+      subject: "Ação necessária: a conta {org} passará ao plano Cedro em {date}",
+      lead: "A conta <b>{org}</b> no MDSign está com novas operações suspensas por uma pendência de pagamento.",
+      body: "Se o pagamento não for regularizado até <b>{date}</b>, a assinatura será encerrada e a organização passará ao plano gratuito Cedro: usuários além do limite do Cedro serão suspensos e novos documentos seguirão as regras do Cedro. Nada é apagado.",
+      export: "Até lá, você pode regularizar o pagamento ou exportar seus documentos normalmente.",
+      button: "Regularizar pagamento",
+      footer: "Aviso enviado pelo MDSign conforme os Termos de Uso, seção 10.",
+    },
+    en: {
+      subject: "Action needed: the {org} account will move to the Cedro plan on {date}",
+      lead: "The <b>{org}</b> account on MDSign has new operations suspended because of a pending payment.",
+      body: "If the payment is not settled by <b>{date}</b>, the subscription will end and the organization will move to the free Cedro plan: users above the Cedro limit will be suspended and new documents will follow the Cedro rules. Nothing is deleted.",
+      export: "Until then, you can settle the payment or export your documents as usual.",
+      button: "Settle payment",
+      footer: "Notice sent by MDSign under the Terms of Use, section 10.",
+    },
+    es: {
+      subject: "Acción necesaria: la cuenta {org} pasará al plan Cedro el {date}",
+      lead: "La cuenta <b>{org}</b> en MDSign tiene las nuevas operaciones suspendidas por un pago pendiente.",
+      body: "Si el pago no se regulariza hasta el <b>{date}</b>, la suscripción terminará y la organización pasará al plan gratuito Cedro: los usuarios por encima del límite del Cedro quedarán suspendidos y los nuevos documentos seguirán las reglas del Cedro. No se borra nada.",
+      export: "Hasta entonces, puede regularizar el pago o exportar sus documentos con normalidad.",
+      button: "Regularizar el pago",
+      footer: "Aviso enviado por MDSign según los Términos de Uso, sección 10.",
+    },
+  } as const;
+  const t = L[(p.locale as Locale) in L ? (p.locale as Locale) : "pt"];
+  const vals = { org: p.orgName, date: p.date };
+  const esc = Object.fromEntries(Object.entries(vals).map(([k, v]) => [k, escapeHtml(v)]));
+  const subject = fill(t.subject, vals).slice(0, 200);
+  const html = `<!doctype html><html><body style="margin:0;background:#f4f2f8;font-family:Arial,Helvetica,sans-serif;color:#1f1a2e">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f2f8;padding:24px 12px"><tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:12px;overflow:hidden">
+<tr><td style="background:#9724C2;padding:18px 24px;color:#ffffff;font-size:20px;font-weight:bold">MDSign</td></tr>
+<tr><td style="padding:24px;font-size:16px;line-height:1.5">
+<p style="margin:0 0 16px">${fill(t.lead, esc)}</p>
+<p style="margin:0 0 16px">${fill(t.body, esc)}</p>
+<p style="margin:0 0 16px">${escapeHtml(t.export)}</p>
+<p style="margin:24px 0" align="center"><a href="${escapeHtml(p.planUrl)}" style="display:inline-block;background:#9724C2;color:#ffffff;text-decoration:none;font-weight:bold;padding:12px 24px;border-radius:8px">${escapeHtml(t.button)}</a></p>
+</td></tr>
+<tr><td style="padding:16px 24px;border-top:1px solid #ece8f3;color:#8a84a0;font-size:12px">${escapeHtml(t.footer)}</td></tr>
+</table></td></tr></table></body></html>`;
+  const strip = (s: string) => fill(s, vals).replace(/<\/?b>/g, "");
+  const text = [
+    strip(t.lead),
+    "",
+    strip(t.body),
+    "",
+    t.export,
+    "",
+    `${t.button}: ${p.planUrl}`,
+    "",
+    t.footer,
+  ].join("\n");
+  return { subject, html, text };
+}

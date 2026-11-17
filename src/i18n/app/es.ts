@@ -94,7 +94,9 @@ const es: AppMessages = {
   },
   account: {
     exportFirst:
-      'Antes de cerrar, descargue todos los documentos con el botón "Descargar todos los documentos (ZIP)" de arriba. El cierre queda habilitado por 24 horas tras la descarga completa.',
+      'Recomendamos descargar todos los documentos con el botón "Descargar todos los documentos (ZIP)" de arriba antes de cerrar. Después del cierre, aún tiene 30 días para descargarlos.',
+    acknowledge:
+      "Entiendo que tendré 30 días para exportar los documentos y comprobantes y que, el día 60, se eliminarán los datos operativos, según los Términos de Uso.",
     exportTitle: "Exportar documentos",
     exportText:
       "Descargue los {n} documentos de la organización en ZIP ({parts} parte(s) de hasta 25), con los PDF firmados y una lista.csv con la situación de cada uno.",
@@ -1386,6 +1388,8 @@ const es: AppMessages = {
       "En el plan Cedro, cada documento está disponible por 6 meses desde su creación, y este plazo terminó. No se eliminó nada. Para volver a descargar, elija un plan en Organización → Plan y cobro.",
     confirm_name_mismatch: "El nombre escrito no coincide con el de la organización.",
     organization_closed: "Esta cuenta ya fue cerrada.",
+    close_acknowledgement_required:
+      "Para cerrar la cuenta, confirme que conoce los plazos de exportación y de eliminación de datos.",
     export_required:
       "Antes de cerrar, descargue todos los documentos (ZIP) en Organización → Exportar y cerrar.",
     email_not_confirmed:

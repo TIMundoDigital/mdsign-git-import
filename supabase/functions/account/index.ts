@@ -3,7 +3,9 @@
 // Ações (com login):
 //   status  → situação do encerramento e quantas partes tem a exportação
 //   export  → ZIP de uma parte (até 25 documentos + lista.csv); proprietário ou administrador
-//   close   → encerra a organização (só o proprietário, confirmando o nome); cancela o plano pago
+//   close   → encerra a organização (só o proprietário, confirmando o nome e a ciência dos
+//             prazos); cancela o plano pago. Não exige download prévio (Termos, seção 10):
+//             o download é recomendado e fica registrado se foi feito.
 //   reopen  → desfaz o encerramento dentro dos 30 dias (volta ao Cedro)
 //
 // O ZIP traz o PDF assinado (ou o original, se o documento não foi concluído) direto do motor.
@@ -59,7 +61,8 @@ Deno.serve(async (req) => {
       return count ?? 0;
     };
 
-    // Encerrar só depois de baixar o ZIP completo (todas as partes nas últimas 24 horas).
+    // ZIP completo baixado nas últimas 24 horas (todas as partes): recomendado antes de encerrar
+    // e registrado na auditoria do encerramento, mas não obrigatório.
     const exportedAll = async (userId: string) => {
       const total = await countDocs();
       if (total === 0) return true;
@@ -189,7 +192,9 @@ Deno.serve(async (req) => {
       const confirm = String(body["confirmName"] ?? "");
       if (confirm.trim().toLowerCase() !== String(org.name).trim().toLowerCase())
         throw new AppError("confirm_name_mismatch", 422);
-      if (!(await exportedAll(caller.user.id))) throw new AppError("export_required", 409);
+      // Ciência dos prazos (30 dias para exportar; dados operacionais apagados no 60º dia).
+      if (body["acknowledged"] !== true) throw new AppError("close_acknowledgement_required", 422);
+      const exported = await exportedAll(caller.user.id);
       const { data: sub } = await admin
         .from("subscriptions")
         .select("asaas_subscription_id, cancel_at")
@@ -211,6 +216,15 @@ Deno.serve(async (req) => {
           error.message.includes("closed") ? "organization_closed" : "forbidden",
           409,
         );
+      // Registro da ciência (Termos, seção 10): quem confirmou e se baixou tudo antes.
+      await admin.rpc("write_audit_as", {
+        org: organizationId,
+        actor: caller.user.id,
+        act: "organization.close_acknowledged",
+        ent: "organization",
+        ent_id: organizationId,
+        payload: { acknowledged: true, exported_before: exported },
+      });
       return json({ exportUntil: until }, 200, origin);
     }
 

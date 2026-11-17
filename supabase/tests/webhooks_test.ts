@@ -388,45 +388,74 @@ Deno.test("Asaas: chargeback suspende; estorno parcial não", async () => {
   }
 });
 
-Deno.test("Asaas: suspensa há mais de 15 dias volta ao Cedro e para de cobrar", async () => {
-  const { fake, asaasCalls } = asaasScenario();
-  const days = (n: number) => new Date(Date.now() - n * 86400000).toISOString();
-  fake.tables["subscriptions"] = [
-    {
-      organization_id: "org-antiga",
+Deno.test(
+  "Asaas: conta suspensa recebe aviso e só volta ao Cedro 15 dias depois dele",
+  async () => {
+    const { fake, asaasCalls } = asaasScenario();
+    const emails: string[] = [];
+    Deno.env.set("RESEND_API_KEY", Deno.env.get("RESEND_API_KEY") || "re_teste");
+    Deno.env.set("EMAIL_FROM", Deno.env.get("EMAIL_FROM") || "MDSign <nao-responda@mdsign.test>");
+    const days = (n: number) => new Date(Date.now() - n * 86400000).toISOString();
+    const sub = (org: string, notice: string | null) => ({
+      organization_id: org,
       plan_id: "ipe",
       status: "suspended",
       billing_status: "overdue",
-      asaas_subscription_id: "sub_antiga",
-      past_due_since: days(16),
+      asaas_subscription_id: `sub_${org}`,
+      past_due_since: days(40),
+      downgrade_notice_at: notice,
       cancel_at: null,
-    },
-    {
-      organization_id: "org-recente",
-      plan_id: "ipe",
-      status: "suspended",
-      billing_status: "overdue",
-      asaas_subscription_id: "sub_recente",
-      past_due_since: days(10),
-      cancel_at: null,
-    },
-  ];
-  try {
-    const out = await runBilling();
-    assertEquals(out.downgraded, 1);
-    assertEquals(out.ended, 1);
-    const [antiga, recente] = fake.tables["subscriptions"]!;
-    assertEquals(antiga!["plan_id"], "cedro");
-    assertEquals(antiga!["status"], "active");
-    assertEquals(antiga!["asaas_subscription_id"], null);
-    assert(asaasCalls.includes("DELETE /v3/subscriptions/sub_antiga"), "parou de cobrar no Asaas");
-    assertEquals(recente!["plan_id"], "ipe", "dentro do prazo continua suspensa");
-    assertEquals(recente!["status"], "suspended");
-    assert(!asaasCalls.some((c) => c.includes("sub_recente")));
-  } finally {
-    fake.restore();
-  }
-});
+    });
+    fake.tables["subscriptions"] = [
+      sub("org-avisada", days(16)),
+      sub("org-no-prazo", days(10)),
+      sub("org-sem-aviso", null),
+    ];
+    fake.tables["organizations"] = [
+      { id: "org-sem-aviso", name: "Empresa Sem Aviso", locale: "pt" },
+    ];
+    fake.tables["memberships"] = [
+      { organization_id: "org-sem-aviso", user_id: "66666666-6666-4666-8666-666666666666", role: "owner", status: "active" },
+      { organization_id: "org-sem-aviso", user_id: "u-colega", role: "member", status: "active" },
+    ];
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async (input: string | URL | Request, init?: RequestInit) => {
+      const req = new Request(input, init);
+      if (new URL(req.url).pathname === "/auth/v1/admin/users/66666666-6666-4666-8666-666666666666")
+        return Response.json({ id: "66666666-6666-4666-8666-666666666666", email: "dona@ex.com", aud: "authenticated" });
+      if (req.url.startsWith("https://api.resend.com")) {
+        const body = (await req.json()) as { to: string | string[]; subject: string };
+        emails.push(`${String(body.to)} | ${body.subject}`);
+        return Response.json({ id: "email-1" });
+      }
+      return originalFetch(req);
+    };
+    try {
+      const out = await runBilling();
+      const [avisada, noPrazo, semAviso] = fake.tables["subscriptions"]!;
+      // Aviso enviado há 16 dias: volta ao Cedro e para de cobrar.
+      assertEquals(avisada!["plan_id"], "cedro");
+      assert(asaasCalls.includes("DELETE /v3/subscriptions/sub_org-avisada"));
+      // Aviso há 10 dias: ainda dentro do prazo.
+      assertEquals(noPrazo!["plan_id"], "ipe");
+      assertEquals(noPrazo!["status"], "suspended");
+      // Sem aviso: recebe o e-mail agora (só a proprietária) e não muda de plano.
+      assertEquals(semAviso!["plan_id"], "ipe");
+      assert(semAviso!["downgrade_notice_at"], "aviso registrado");
+      assertEquals(emails.length, 1);
+      assert(
+        emails[0]!.startsWith(
+          "dona@ex.com | Ação necessária: a conta Empresa Sem Aviso passará ao plano Cedro",
+        ),
+      );
+      assertEquals([out.notified, out.downgraded], [1, 1]);
+      assert(!asaasCalls.some((c) => c.includes("org-no-prazo") || c.includes("org-sem-aviso")));
+    } finally {
+      globalThis.fetch = originalFetch;
+      fake.restore();
+    }
+  },
+);
 
 // ---------- Troca de plano (checkout) ----------
 

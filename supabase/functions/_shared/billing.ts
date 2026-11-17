@@ -12,6 +12,8 @@
 
 import { asaas, asaasEnv, type AsaasPayment, type AsaasSubscription } from "./asaas.ts";
 import { admin } from "./auth.ts";
+import { downgradeNoticeEmail, emailConfigured, sendEmail } from "./email.ts";
+import { siteUrl } from "./notifications.ts";
 
 const PAID = new Set(["PAYMENT_CONFIRMED", "PAYMENT_RECEIVED"]);
 /**
@@ -96,6 +98,7 @@ async function onPaid(sub: Sub, p: AsaasPayment) {
     status: "active",
     billing_status: "paid",
     past_due_since: null,
+    downgrade_notice_at: null,
     last_payment_at: p.confirmedDate ?? p.paymentDate ?? now,
     next_due_date: remote.nextDueDate ?? null,
     current_period_end: remote.nextDueDate ?? null,
@@ -280,9 +283,56 @@ export async function processBillingEvent(event: {
   return sub.organization_id;
 }
 
+/**
+ * E-mail ao(s) proprietário(s) com a data da volta ao Cedro. Devolve true se ao menos um saiu.
+ * Sem e-mail configurado, não avisa (e a conta não muda de plano até poder avisar).
+ */
+async function sendDowngradeNotice(organizationId: string, when: Date) {
+  if (!emailConfigured()) return false;
+  const { data: org } = await admin
+    .from("organizations")
+    .select("name, locale")
+    .eq("id", organizationId)
+    .maybeSingle();
+  const { data: owners } = await admin
+    .from("memberships")
+    .select("user_id")
+    .eq("organization_id", organizationId)
+    .eq("role", "owner")
+    .eq("status", "active");
+  const locale = String(org?.locale ?? "pt");
+  const date = new Intl.DateTimeFormat(locale === "pt" ? "pt-BR" : locale, {
+    dateStyle: "short",
+    timeZone: "America/Sao_Paulo",
+  }).format(when);
+  const mail = downgradeNoticeEmail({
+    locale,
+    orgName: String(org?.name ?? "MDSign"),
+    date,
+    planUrl: `${siteUrl()}/app/plan`,
+  });
+  let sent = false;
+  for (const o of owners ?? []) {
+    try {
+      const { data } = await admin.auth.admin.getUserById(o.user_id as string);
+      const email = data?.user?.email;
+      if (!email) continue;
+      await sendEmail({
+        to: email,
+        ...mail,
+        idempotencyKey: `downgrade-notice:${organizationId}:${o.user_id}:${when.toISOString().slice(0, 10)}`,
+      });
+      sent = true;
+    } catch (e) {
+      console.error("downgrade notice", organizationId, String(e).slice(0, 200));
+    }
+  }
+  return sent;
+}
+
 /** Rotina de hora em hora: reprocessa eventos, suspende após a tolerância, encerra cancelados. */
 export async function runBilling() {
-  const out = { retried: 0, suspended: 0, downgraded: 0, ended: 0 };
+  const out = { retried: 0, suspended: 0, notified: 0, downgraded: 0, ended: 0 };
   try {
     asaasEnv();
   } catch {
@@ -350,14 +400,36 @@ export async function runBilling() {
     out.suspended++;
   }
 
-  // Suspensão longa: encerra a assinatura no Asaas (para de cobrar) e agenda a volta ao Cedro
-  // logo abaixo. Documentos, histórico e usuários continuam preservados.
+  // Conta suspensa: avisa o proprietário da data em que passará ao Cedro (Termos, seção 10:
+  // notificação com antecedência mínima de 15 dias). Sem aviso enviado, não há mudança.
+  const { data: toNotify } = await admin
+    .from("subscriptions")
+    .select("organization_id")
+    .eq("status", "suspended")
+    .is("cancel_at", null)
+    .is("downgrade_notice_at", null);
+  for (const s of toNotify ?? []) {
+    const when = new Date(Date.now() + downgradeDays * 86400000);
+    if (!(await sendDowngradeNotice(s.organization_id, when))) continue;
+    await admin
+      .from("subscriptions")
+      .update({ downgrade_notice_at: new Date().toISOString() })
+      .eq("organization_id", s.organization_id)
+      .is("downgrade_notice_at", null);
+    await audit(s.organization_id, "billing.downgrade_notice", {
+      downgrade_on: when.toISOString().slice(0, 10),
+    });
+    out.notified++;
+  }
+
+  // Prazo do aviso vencido: encerra a assinatura no Asaas (para de cobrar) e agenda a volta ao
+  // Cedro logo abaixo. Documentos, histórico e usuários continuam preservados.
   const { data: stale } = await admin
     .from("subscriptions")
     .select("organization_id, asaas_subscription_id")
     .eq("status", "suspended")
     .is("cancel_at", null)
-    .lt("past_due_since", new Date(Date.now() - downgradeDays * 86400000).toISOString());
+    .lt("downgrade_notice_at", new Date(Date.now() - downgradeDays * 86400000).toISOString());
   for (const s of stale ?? []) {
     if (s.asaas_subscription_id) {
       try {

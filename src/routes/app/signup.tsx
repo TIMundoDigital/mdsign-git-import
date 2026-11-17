@@ -11,9 +11,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabase";
 import { getAcquisitionPayload, track, trackGrowth } from "@/lib/analytics";
+import { LEGAL_VERSION } from "@/content/legal";
 
 // Versão do texto dos termos aceita no cadastro (fica gravada com o aceite).
-const TERMS_VERSION = "2026-10";
+/** Versão dos Termos e da Política aceita no cadastro (a mesma publicada nas páginas). */
+const TERMS_VERSION = LEGAL_VERSION;
 
 type Search = { redirect?: string };
 

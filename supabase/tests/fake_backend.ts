@@ -323,6 +323,11 @@ export function installFakeBackend(opts: {
     const req = new Request(input, init);
     const url = new URL(req.url);
     if (url.pathname.startsWith("/rest/v1/")) return await rest(req, url);
+    const adminUser = /^\/auth\/v1\/admin\/users\/([\w-]+)$/.exec(url.pathname);
+    if (adminUser) {
+      const user = Object.values(opts.users ?? {}).find((u) => u.id === adminUser[1]);
+      return user ? json({ ...user, aud: "authenticated" }) : json({ msg: "User not found" }, 404);
+    }
     if (url.pathname === "/auth/v1/user") {
       const token = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
       const user = opts.users?.[token];

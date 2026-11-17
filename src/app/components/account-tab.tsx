@@ -90,6 +90,8 @@ export function AccountTab() {
   const { current, can, refresh } = useOrg();
   const [status, reload] = useAccountStatus(current?.id);
   const [confirm, setConfirm] = useState("");
+  // Ciência dos prazos (Termos, seção 10): obrigatória; o download antes é só recomendado.
+  const [acknowledged, setAcknowledged] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   if (!current) return null;
@@ -105,9 +107,11 @@ export function AccountTab() {
         action: "close",
         organizationId: current.id,
         confirmName: confirm,
+        acknowledged,
       });
       toast.success(t.account.closed);
       setConfirm("");
+      setAcknowledged(false);
       reload();
       await refresh();
     } catch (e) {
@@ -175,7 +179,7 @@ export function AccountTab() {
           ) : (
             <>
               {status && !status.exportedAll && (
-                <p className="flex items-start gap-2 rounded-xl border border-orange-300 bg-orange-50 p-3 text-sm text-orange-800">
+                <p className="flex items-start gap-2 rounded-xl border border-orange-300 bg-orange-50 p-3 text-sm text-orange-900">
                   <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
                   {t.account.exportFirst}
                 </p>
@@ -196,13 +200,22 @@ export function AccountTab() {
                   autoComplete="off"
                 />
               </div>
+              <label className="flex items-start gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={acknowledged}
+                  onChange={(e) => setAcknowledged(e.target.checked)}
+                  className="mt-0.5 size-4 shrink-0 accent-[var(--color-brand)]"
+                />
+                <span>{t.account.acknowledge}</span>
+              </label>
               {error && <FormMessage kind="error">{error}</FormMessage>}
               <Button
                 variant="destructive"
                 className="w-fit"
                 disabled={
                   busy ||
-                  !status?.exportedAll ||
+                  !acknowledged ||
                   confirm.trim().toLowerCase() !== current.name.trim().toLowerCase()
                 }
                 onClick={() => void close()}
