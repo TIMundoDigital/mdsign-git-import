@@ -17,7 +17,7 @@ export function SigningFrame({
   onSigned: () => void;
   onError: () => void;
 }) {
-  const { locale } = useAppI18n();
+  const { locale, t } = useAppI18n();
   const container = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
   const signed = useRef(onSigned);
@@ -37,6 +37,8 @@ export function SigningFrame({
           const frame = container.current?.querySelector("iframe");
           if (!frame || frame.getAttribute("allow")?.includes("geolocation")) return;
           frame.setAttribute("allow", "geolocation; camera");
+          // Nome do quadro para leitores de tela (WCAG 4.1.2).
+          frame.setAttribute("title", t.signLink.frameTitle);
           const url = frame.getAttribute("src");
           if (url) frame.setAttribute("src", url);
           watch.disconnect();

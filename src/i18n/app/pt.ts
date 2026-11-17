@@ -1111,6 +1111,7 @@ const pt = {
     } as Record<string, string>,
   },
   signLink: {
+    frameTitle: "Tela de assinatura do documento",
     secure: "Link seguro do MDSign. Você vai confirmar sua identidade antes de assinar.",
     titles: {
       loading: "Abrindo o documento…",
@@ -1163,6 +1164,9 @@ const pt = {
       clear: "Limpar seleção",
       download: "Baixar",
       zipped: "{n} documento(s) no arquivo ZIP.",
+      zipKind: "Tipo de arquivo no ZIP",
+      zipSigned: "PDF assinado",
+      zipPrintable: "Versão para impressão",
       zipMax: "Baixe até 30 documentos por vez.",
       noneValid: "Nenhuma ação disponível para os selecionados.",
       queueTitle: "Documento {n} de {total}",

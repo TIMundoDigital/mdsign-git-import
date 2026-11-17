@@ -73,7 +73,11 @@ function SignLink() {
         <LanguageSelect />
       </header>
       <main id="conteudo" className="mx-auto max-w-xl px-4 pb-16">
-        <section className="grid gap-3 rounded-2xl border bg-white p-6 text-center shadow-sm">
+        <section
+          className="grid gap-3 rounded-2xl border bg-white p-6 text-center shadow-sm"
+          role="status"
+          aria-live="polite"
+        >
           <Icon
             className={
               state === "loading" || state === "ready"

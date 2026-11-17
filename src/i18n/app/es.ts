@@ -1102,6 +1102,7 @@ const es: AppMessages = {
     } as Record<string, string>,
   },
   signLink: {
+    frameTitle: "Pantalla de firma del documento",
     secure: "Enlace seguro de MDSign. Confirmarás tu identidad antes de firmar.",
     titles: {
       loading: "Abriendo el documento…",
@@ -1153,6 +1154,9 @@ const es: AppMessages = {
       clear: "Limpiar selección",
       download: "Descargar",
       zipped: "{n} documento(s) en el archivo ZIP.",
+      zipKind: "Tipo de archivo en el ZIP",
+      zipSigned: "PDF firmado",
+      zipPrintable: "Versión para imprimir",
       zipMax: "Descargue hasta 30 documentos por vez.",
       noneValid: "No hay acciones disponibles para los seleccionados.",
       queueTitle: "Documento {n} de {total}",

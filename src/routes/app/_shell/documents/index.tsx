@@ -81,6 +81,8 @@ function DocumentsPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [queue, setQueue] = useState<DocumentRow[] | null>(null);
   const [zipping, setZipping] = useState(false);
+  // ZIP em lote: PDF assinado (padrão) ou versão para impressão, que o servidor já aceitava.
+  const [zipVersion, setZipVersion] = useState<"signed" | "printable">("signed");
   const [reasoning, setReasoning] = useState<{
     mode: "refuse" | "cancel";
     docs: DocumentRow[];
@@ -221,6 +223,7 @@ function DocumentsPage() {
     try {
       const blob = await callFunctionBlob("documents-zip", {
         documentIds: chosen.map((d) => d.id),
+        ...(zipVersion === "printable" ? { version: "printable" } : {}),
       });
       downloadBlob("mdsign-documentos.zip", blob);
       toast.success(f(t.documents.batch.zipped, { n: String(chosen.length) }));
@@ -498,6 +501,16 @@ function DocumentsPage() {
                   {t.documents.batch.refuse} ({toRefuse.length})
                 </Button>
               )}
+              <select
+                aria-label={t.documents.batch.zipKind}
+                value={zipVersion}
+                onChange={(e) => setZipVersion(e.target.value as "signed" | "printable")}
+                disabled={zipping}
+                className="h-8 rounded-md border bg-white px-2 text-sm"
+              >
+                <option value="signed">{t.documents.batch.zipSigned}</option>
+                <option value="printable">{t.documents.batch.zipPrintable}</option>
+              </select>
               <Button
                 size="sm"
                 variant="outline"
