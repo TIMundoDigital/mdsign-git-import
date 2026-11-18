@@ -1206,7 +1206,8 @@ const es: AppMessages = {
       cancelTitle: "Cancelar {n} documento(s)",
       cancelHint:
         "Los participantes ya no podrán firmar y serán avisados. Las firmas ya realizadas siguen registradas. No se puede deshacer.",
-      cancelReason: "Motivo (opcional, lo ven los participantes)",
+      cancelReason:
+        "Justificación (obligatoria, mínimo de 5 caracteres; la ven los participantes y aparece en el historial)",
       cancelConfirm: "Cancelar {n}",
       canceled: "{n} documento(s) cancelado(s).",
       keep: "Volver",
@@ -1396,6 +1397,7 @@ const es: AppMessages = {
     invalid_webhook_url: "Usa una dirección HTTPS pública (no se aceptan direcciones internas).",
     not_found: "No encontrado.",
     document_not_pending: "Solo se pueden cambiar documentos que aún esperan firma.",
+    cancel_reason_required: "Informe la justificación de la cancelación (mínimo de 5 caracteres).",
     participant_locked: "No se puede cambiar a quien ya firmó, aprobó o rechazó.",
     invalid_observers: "Revisa los correos de los observadores.",
     unsafe_association:

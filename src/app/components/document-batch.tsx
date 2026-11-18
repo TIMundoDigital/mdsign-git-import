@@ -120,6 +120,9 @@ export function SigningQueue({ docs, onClose }: { docs: DocumentRow[]; onClose: 
  * Rejeitar (quem está com a vez) ou cancelar (quem enviou) em lote: um motivo para todos; cada
  * recusa/cancelamento é feito e registrado por documento, um de cada vez, mostrando o progresso.
  */
+/** Tamanho mínimo da justificativa do cancelamento (o servidor confere o mesmo). */
+export const CANCEL_REASON_MIN = 5;
+
 export function ReasonDialog({
   mode,
   docs,
@@ -141,8 +144,8 @@ export function ReasonDialog({
   const d = t.documents.decision;
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
-  // Cancelar aceita sem motivo (o MDSign registra um padrão); rejeitar exige motivo.
-  const minReason = mode === "refuse" ? 3 : 0;
+  // Rejeitar exige motivo; cancelar exige justificativa (pedido de 18/11/2026).
+  const minReason = mode === "refuse" ? 3 : CANCEL_REASON_MIN;
 
   async function run() {
     setBusy(true);

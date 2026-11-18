@@ -37,6 +37,7 @@ import {
   type ObserverRow,
 } from "@/app/components/document-edit";
 import { useConfirm } from "@/app/components/confirm-dialog";
+import { ReasonDialog } from "@/app/components/document-batch";
 import { DecisionDialog, type Decision } from "@/app/components/decision-dialog";
 import { ShareDialog } from "@/app/components/share-dialog";
 import { SigningFrame } from "@/app/components/signing-frame";
@@ -98,6 +99,8 @@ function DocumentDetail() {
   >(undefined);
   const [events, setEvents] = useState<EventRow[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
+  // Cancelar pede justificativa (mesmo diálogo do cancelamento em lote).
+  const [canceling, setCanceling] = useState(false);
   const [embedUrl, setEmbedUrl] = useState<string | null>(null);
   const [observers, setObservers] = useState<ObserverRow[]>([]);
   const [attachments, setAttachments] = useState<{ id: string; name: string }[]>([]);
@@ -252,6 +255,17 @@ function DocumentDetail() {
   return (
     <>
       {confirmDialog}
+      {canceling && (
+        <ReasonDialog
+          mode="cancel"
+          docs={[doc]}
+          onClose={() => setCanceling(false)}
+          onDone={() => {
+            setCanceling(false);
+            void load();
+          }}
+        />
+      )}
       <PageHeader
         title={doc.name}
         subtitle={`${t.documents.kind[doc.kind]} · ${t.documents.createdAt} ${formatDate(doc.created_at, locale)}`}
@@ -383,13 +397,7 @@ function DocumentDetail() {
             variant="ghost"
             className="text-destructive"
             disabled={busy !== null}
-            onClick={() =>
-              void confirm({
-                title: t.documents.actions.cancel,
-                text: t.documents.actions.cancelConfirm,
-                action: t.documents.actions.cancel,
-              }).then((ok) => ok && void run("cancel", () => documentAction(id, "cancel")))
-            }
+            onClick={() => setCanceling(true)}
           >
             <XCircle aria-hidden />
             {t.documents.actions.cancel}

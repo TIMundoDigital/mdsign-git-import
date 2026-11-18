@@ -1189,7 +1189,8 @@ const en: AppMessages = {
       cancelTitle: "Cancel {n} document(s)",
       cancelHint:
         "Participants will no longer be able to sign and are notified. Signatures already made stay on record. This can't be undone.",
-      cancelReason: "Reason (optional, shown to participants)",
+      cancelReason:
+        "Justification (required, at least 5 characters; shown to participants and in the timeline)",
       cancelConfirm: "Cancel {n}",
       canceled: "{n} document(s) canceled.",
       keep: "Go back",
@@ -1376,6 +1377,7 @@ const en: AppMessages = {
     invalid_webhook_url: "Use a public HTTPS address (internal addresses are not accepted).",
     not_found: "Not found.",
     document_not_pending: "Only documents still awaiting signature can be changed.",
+    cancel_reason_required: "Enter the justification for the cancellation (at least 5 characters).",
     participant_locked: "People who already signed, approved or refused can't be changed.",
     invalid_observers: "Check the observers' emails.",
     unsafe_association:

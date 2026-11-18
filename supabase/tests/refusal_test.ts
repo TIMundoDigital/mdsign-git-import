@@ -188,3 +188,53 @@ Deno.test("assinar: quem ainda não tem a vez recebe aviso claro, sem chamar o m
     fake.restore();
   }
 });
+
+// ---------- Cancelamento com justificativa obrigatória (18/11/2026) ----------
+const cancel = (token: string, body: Record<string, unknown>) =>
+  action(
+    new Request("http://local/documents-action", {
+      method: "POST",
+      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+      body: JSON.stringify({ documentId: "doc-r", action: "cancel", ...body }),
+    }),
+  );
+
+Deno.test("cancelamento: sem justificativa é recusado e o motor não é chamado", async () => {
+  const fake = scenario();
+  fake.tables["documents"]![0]!["created_by"] = BIA.id;
+  try {
+    for (const reason of [undefined, "", "   ", "abc"]) {
+      const r = await cancel("token-bia", reason === undefined ? {} : { reason });
+      assertEquals(r.status, 400, String(reason));
+      assertEquals((await r.json()).error, "cancel_reason_required");
+    }
+    assert(!fake.engineCalls.some((c) => c.includes("cancellation")));
+    assertEquals(fake.tables["documents"]![0]!["status"], "pending");
+  } finally {
+    fake.restore();
+  }
+});
+
+Deno.test("cancelamento: a justificativa vai ao motor e aparece na linha do tempo", async () => {
+  const fake = scenario();
+  fake.tables["documents"]![0]!["created_by"] = BIA.id;
+  try {
+    const r = await cancel("token-bia", { reason: "  Contrato substituído pela versão 3  " });
+    assertEquals(r.status, 200);
+    await r.body?.cancel();
+    assertEquals(
+      fake.engine.documents[ENGINE_ID]!["statusUpdateReason"],
+      "Contrato substituído pela versão 3",
+    );
+    assertEquals(fake.tables["documents"]![0]!["status"], "canceled");
+    const ev = (fake.tables["document_events"] ?? []).find(
+      (e) => e["type"] === "document.canceled",
+    );
+    assertEquals(
+      (ev?.["data"] as { reason?: string })?.reason,
+      "Contrato substituído pela versão 3",
+    );
+  } finally {
+    fake.restore();
+  }
+});

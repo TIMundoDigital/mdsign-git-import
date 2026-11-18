@@ -49,6 +49,8 @@ export type EngineDocument = {
   observers?: { id: string; user?: { name?: string; email?: string } }[];
   /** Código de validação (impresso na página de assinaturas do PDF). */
   key?: string | null;
+  /** Motivo da última mudança de situação (ex.: justificativa do cancelamento). */
+  statusUpdateReason?: string | null;
   /** Contexto de segurança da instância: métodos que o motor aceita. */
   securityContext?: EngineSecurityContext | null;
 };

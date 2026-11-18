@@ -317,6 +317,15 @@ export function installFakeBackend(opts: {
       if (doc) doc["status"] = "Refused";
       return new Response(null, { status: 200 });
     }
+    const cancellation = /^\/api\/documents\/([0-9a-f-]+)\/cancellation$/i.exec(url.pathname);
+    if (req.method === "POST" && cancellation) {
+      const doc = engine.documents[cancellation[1]!];
+      if (!doc) return json({ code: "DocumentNotFound", message: "not found" }, 404);
+      doc["status"] = "Canceled";
+      doc["statusUpdateReason"] = String(((await req.json()) as Row)["reason"] ?? "");
+      doc["updateDate"] = "2026-11-18T12:00:00Z";
+      return new Response(null, { status: 200 });
+    }
     const m = /^\/api\/documents\/([0-9a-f-]+)$/i.exec(url.pathname);
     if (req.method === "GET" && m) {
       const id = m[1]!;

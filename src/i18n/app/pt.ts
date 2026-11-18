@@ -1216,7 +1216,8 @@ const pt = {
       cancelTitle: "Cancelar {n} documento(s)",
       cancelHint:
         "Os participantes não poderão mais assinar e são avisados. Assinaturas já feitas continuam registradas. Não dá para desfazer.",
-      cancelReason: "Motivo (opcional, aparece para os participantes)",
+      cancelReason:
+        "Justificativa (obrigatória, mínimo de 5 caracteres; aparece para os participantes e na linha do tempo)",
       cancelConfirm: "Cancelar {n}",
       canceled: "{n} documento(s) cancelado(s).",
       keep: "Voltar",
@@ -1403,6 +1404,7 @@ const pt = {
     invalid_webhook_url: "Use um endereço HTTPS público (não aceitamos endereços internos).",
     not_found: "Não encontrado.",
     document_not_pending: "Só é possível alterar documentos que ainda aguardam assinatura.",
+    cancel_reason_required: "Informe a justificativa do cancelamento (mínimo de 5 caracteres).",
     participant_locked: "Quem já assinou, aprovou ou recusou não pode ser alterado.",
     invalid_observers: "Confira os e-mails dos observadores.",
     unsafe_association:

@@ -102,6 +102,8 @@ async function recordViewed(doc: Doc, participantId: string, caller: Caller) {
   }
 }
 
+/** Tamanho mínimo da justificativa do cancelamento (a tela confere o mesmo). */
+const CANCEL_REASON_MIN = 5;
 Deno.serve(async (req) => {
   const origin = req.headers.get("origin");
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders(origin) });
@@ -181,8 +183,9 @@ Deno.serve(async (req) => {
       case "cancel": {
         if (!(await canManage(caller, doc))) throw new AppError("forbidden", 403);
         if (doc.status !== "pending") throw new AppError("document_not_pending", 409);
-        const reason =
-          (body.reason ?? "").trim().slice(0, 500) || "Cancelado pelo remetente no MDSign.";
+        // Justificativa obrigatória (pedido de 18/11/2026): vai ao SignDoc e à linha do tempo.
+        const reason = (body.reason ?? "").trim().slice(0, 500);
+        if (reason.length < CANCEL_REASON_MIN) throw new AppError("cancel_reason_required", 400);
         await signdoc.cancel(doc.engine_document_id, reason);
         await syncDocument(doc);
         await admin.rpc("write_audit_as", {

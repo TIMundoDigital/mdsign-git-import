@@ -217,8 +217,15 @@ export async function syncDocument(doc: DocRow, engine?: EngineDocument) {
       .eq("id", doc.id)
       .neq("status", status)
       .select("id");
-    if (changed?.length && status !== "pending")
-      events.push({ type: `document.${status}`, occurred_at: current.updateDate });
+    if (changed?.length && status !== "pending") {
+      // Cancelamento: a justificativa vem do motor (vale para MDSign, API e painel do SignDoc).
+      const reason = status === "canceled" ? (current.statusUpdateReason ?? "").trim() : "";
+      events.push({
+        type: `document.${status}`,
+        occurred_at: current.updateDate,
+        ...(reason ? { data: { reason: reason.slice(0, 500) } } : {}),
+      });
+    }
   }
 
   if (events.length)
