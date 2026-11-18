@@ -64,5 +64,7 @@ celular, numa organização com o e-mail próprio desligado (convites pelo SignD
 - Segredo atual: **`SIGNDOC_AUTH_METHODS=sms,selfie`**. O WhatsApp volta quando a Lacuna o
   habilitar no contexto padrão (pedido feito com a mensagem acima) e um novo teste passar.
 - Pendente: conferir na "Versão para impressão" se a página de assinaturas cita o método usado.
-- Ainda sem decisão: em quais planos cada método entra (hoje valem para todos) e se o código por
-  e-mail deve ser dispensado quando houver SMS (`disableEmailAuthenticationToSignElectronically`).
+- Decisão da responsável (18/11/2026): **SMS e selfie em todos os planos** (sem regra por plano;
+  só o certificado depende de `certificate_signature`).
+- Ainda sem decisão: se o código por e-mail deve ser dispensado quando houver SMS
+  (`disableEmailAuthenticationToSignElectronically`).
