@@ -197,7 +197,8 @@ Não há clientes reais: todas as contas são de teste.
      própria "MDSign Login"), configurado no painel do Supabase; modelos em português de
      `supabase/templates` publicados com `npx supabase config push` (18/11/2026). O SMTP não está
      no `config.toml`, de propósito: o push não mexe nele.
-   - Falta: trocar a chave "MDSIGN" das funções (Full access) por uma só de envio para `mdsign.app`.
+   - Uma única chave no Resend, "MDSign Login" (só envio, só `mdsign.app`), usada pelo SMTP do
+     login e pelas funções (`RESEND_API_KEY`). Se revogar, gravar a nova nos dois lugares.
    - O domínio `mail.mundodigitaltech.com.br`, que ficou pela metade no Resend, não é mais usado.
 2. **Certificado digital: "Invalid license"** ao assinar com A3 dentro do quadro embutido.
    Hipótese: a licença do Web PKI cobre só `sign.signdocmd.com.br`. Próximo teste: assinar o mesmo
