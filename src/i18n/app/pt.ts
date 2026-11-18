@@ -725,7 +725,9 @@ const pt = {
       certificate: "Certificado digital",
       livenessOnSelfie: "Selfie exige prova de vida",
       noDocuments: "Ainda não há documento criado no motor para consultar.",
-      noContext: "O SignDoc não devolveu o contexto de segurança deste documento.",
+      noContext:
+        "O SignDoc não devolveu o contexto de segurança em nenhum dos {n} documentos mais recentes.",
+      fieldsReturned: "Campos devolvidos pelo SignDoc (só os nomes, para o chamado na Lacuna)",
       checkedAt: "Conferido em",
       names: {
         email: "Código por e-mail",

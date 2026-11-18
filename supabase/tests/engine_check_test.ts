@@ -99,3 +99,30 @@ Deno.test(
     }
   },
 );
+
+Deno.test(
+  "conferência do motor: sem contexto, tenta os documentos recentes e mostra só os nomes dos campos",
+  async () => {
+    const fake = scenario(true);
+    fake.engine.documents[NEW] = { id: NEW, status: "Pending", flowActions: [], name: "Contrato" };
+    fake.engine.documents[OLD] = { id: OLD, status: "Pending", flowActions: [], name: "Outro" };
+    try {
+      const res = await call("token-admin");
+      assertEquals(res.status, 200);
+      const body = await res.json();
+      assertEquals(body.engine, null);
+      assertEquals(body.reason, "no_context");
+      assertEquals(body.documentsChecked, 2);
+      assertEquals(body.fields.document, ["flowActions", "id", "name", "status"]);
+      assertEquals(JSON.stringify(body).includes("Contrato"), false, "nunca devolve valores");
+      assertEquals(
+        fake.engineCalls.filter(
+          (c) => c.startsWith("GET /api/documents/") && !c.endsWith("details"),
+        ),
+        [`GET /api/documents/${NEW}`, `GET /api/documents/${OLD}`],
+      );
+    } finally {
+      fake.restore();
+    }
+  },
+);

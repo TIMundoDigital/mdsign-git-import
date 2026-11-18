@@ -700,7 +700,9 @@ const en: AppMessages = {
       certificate: "Digital certificate",
       livenessOnSelfie: "Selfie requires liveness",
       noDocuments: "There is no document created in the engine to check yet.",
-      noContext: "SignDoc did not return the security context for this document.",
+      noContext:
+        "SignDoc did not return the security context for any of the {n} most recent documents.",
+      fieldsReturned: "Fields returned by SignDoc (names only, for the Lacuna ticket)",
       checkedAt: "Checked at",
       names: {
         email: "E-mail code",

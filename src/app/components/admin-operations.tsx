@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { callFunction } from "@/app/api";
 import { errorText } from "@/app/errors";
+import { fillText } from "@/app/features";
 import { useAppI18n } from "@/app/i18n";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
@@ -278,6 +279,8 @@ type EngineCheck = {
     methods: Record<string, boolean | null>;
   } | null;
   reason: "no_documents" | "no_context" | null;
+  fields?: Record<string, string[]>;
+  documentsChecked?: number;
   checkedAt?: string;
 };
 
@@ -321,7 +324,17 @@ export function EngineMethods({
       {data && (
         <div className="grid gap-3 p-4 text-sm" aria-live="polite">
           {data.reason === "no_documents" && <p>{x.noDocuments}</p>}
-          {data.reason === "no_context" && <p>{x.noContext}</p>}
+          {data.reason === "no_context" && (
+            <>
+              <p>{fillText(x.noContext, { n: data.documentsChecked ?? 1 })}</p>
+              {Object.entries(data.fields ?? {}).map(([where, names]) => (
+                <p key={where} className="text-xs text-muted-foreground">
+                  {x.fieldsReturned} ({where}):{" "}
+                  <span className="font-mono">{names.join(", ") || "—"}</span>
+                </p>
+              ))}
+            </>
+          )}
           {data.engine && (
             <>
               <p>

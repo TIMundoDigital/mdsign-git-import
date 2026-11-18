@@ -213,6 +213,10 @@ export const signdoc = {
   getDocument(id: string) {
     return call<EngineDocument>("GET", `/api/documents/${id}`);
   },
+  /** Detalhes das assinaturas (inclui o contexto de segurança e as evidências). Só leitura. */
+  signaturesDetails(id: string) {
+    return call<Record<string, unknown>>("GET", `/api/documents/${id}/signatures-details`);
+  },
   actionUrl(
     id: string,
     body: { identifier?: string; emailAddress?: string; flowActionId?: string },

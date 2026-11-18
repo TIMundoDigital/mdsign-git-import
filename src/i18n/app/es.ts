@@ -715,7 +715,9 @@ const es: AppMessages = {
       certificate: "Certificado digital",
       livenessOnSelfie: "La selfie exige prueba de vida",
       noDocuments: "Todavía no hay documento creado en el motor para consultar.",
-      noContext: "SignDoc no devolvió el contexto de seguridad de este documento.",
+      noContext:
+        "SignDoc no devolvió el contexto de seguridad en ninguno de los {n} documentos más recientes.",
+      fieldsReturned: "Campos devueltos por SignDoc (solo los nombres, para el ticket con Lacuna)",
       checkedAt: "Verificado el",
       names: {
         email: "Código por e-mail",

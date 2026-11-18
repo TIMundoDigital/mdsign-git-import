@@ -65,7 +65,7 @@
 - **Testes e checagens Deno só numa cópia fora do repositório**, nunca na raiz (quebra o
   `node_modules`; nesse caso, `rm -rf node_modules && npx -y bun@1 install --frozen-lockfile`):
   `cp -R supabase /tmp/x && cd /tmp/x && SUPABASE_URL=http://127.0.0.1:9 SUPABASE_SERVICE_ROLE_KEY=teste SUPABASE_ANON_KEY=teste SIGNDOC_API_KEY=teste SIGNDOC_WEBHOOK_TOKEN=token-de-teste npx -y deno@2.9.6 test -A tests/`
-  (65 testes em 18/11/2026; banco, login, SignDoc, Asaas, Resend e Storage simulados em
+  (66 testes em 18/11/2026; banco, login, SignDoc, Asaas, Resend e Storage simulados em
   `supabase/tests/fake_backend.ts`).
 - CI do GitHub (`.github/workflows/ci.yml`): etapas verificar, servidor e banco. Resultado sem
   login pela API pública (limite de 60 consultas por hora).
