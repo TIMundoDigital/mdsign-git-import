@@ -324,6 +324,10 @@ export async function createDocument(input: CreateInput): Promise<Created> {
   // Mais de um aprovador (aprovação em várias etapas) depende do plano; no Cedro, 1 aprovador.
   if (input.participants.filter((p) => p.role === "approver").length > 1)
     await assertFeature(input.organizationId, "approval_multi");
+  // Assinatura com certificado (nível "qualified") só nos planos que incluem o certificado
+  // (no Cedro fica oculto), também por API e formulário (auditoria 5.3).
+  if (input.participants.some((p) => p.authLevel === "qualified"))
+    await assertFeature(input.organizationId, "certificate_signature");
   // Consumo (franquia da pessoa no Cedro; mês no plano pago): reserva antes de criar no motor.
   // O que consome 1 documento: a criação de 1 documento no motor, com qualquer número de
   // participantes. Mesma chave = mesma reserva (reenvio não cobra duas vezes).

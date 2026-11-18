@@ -243,6 +243,8 @@ Deno.serve(async (req) => {
       (parts ?? []).filter((p) => p.role === "approver" && !removed.includes(p.id as string))
         .length + added.filter((p) => p.role === "approver").length;
     if (approvers > 1) await assertFeature(doc.organization_id, "approval_multi");
+    if (added.some((p) => p.authLevel === "qualified"))
+      await assertFeature(doc.organization_id, "certificate_signature");
     added.forEach((p, i) => {
       const wanted = Math.trunc(Number(addedRaw[i]?.step)) || lastStep + 1;
       p.step = Math.max(wanted, pendingStep === Number.MAX_SAFE_INTEGER ? 1 : pendingStep);
