@@ -20,6 +20,7 @@ import { useAppI18n } from "@/app/i18n";
 import { useOrg } from "@/app/org";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { planText } from "@/app/plan-texts";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 
@@ -335,12 +336,12 @@ function PlanPage() {
             <h2 id="next-plan" className="font-display text-lg font-semibold">
               {next.id === "mogno" ? p.nextMogno : fillText(p.next, { plan: next.name })}
             </h2>
-            {next.description && <p className="text-sm">{next.description}</p>}
+            {next.description && <p className="text-sm">{planText(next.description, locale)}</p>}
             <ul className="grid gap-1.5 text-sm">
               {next.benefits.map((b) => (
                 <li key={b} className="flex items-start gap-2">
                   <Check className="mt-0.5 size-4 shrink-0 text-brand" aria-hidden />
-                  {b}
+                  {planText(b, locale)}
                 </li>
               ))}
             </ul>
