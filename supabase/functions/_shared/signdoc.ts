@@ -215,7 +215,14 @@ export const signdoc = {
   },
   /** Detalhes das assinaturas (inclui o contexto de segurança e as evidências). Só leitura. */
   signaturesDetails(id: string) {
-    return call<Record<string, unknown>>("GET", `/api/documents/${id}/signatures-details`);
+    // "Sem assinaturas ainda" (422) é resposta normal aqui: não entra como erro do motor.
+    return call<Record<string, unknown>>(
+      "GET",
+      `/api/documents/${id}/signatures-details`,
+      undefined,
+      undefined,
+      true,
+    );
   },
   actionUrl(
     id: string,
