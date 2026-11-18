@@ -193,8 +193,11 @@ Não há clientes reais: todas as contas são de teste.
    - Testado em 18/11/2026: e-mail próprio da Cardosos religado; lembrete enviado, entregue e
      aberto. O Microsoft 365 mandou a primeira mensagem para o Lixo Eletrônico (domínio novo).
      Chaves antigas apagadas.
-   - Falta: trocar a chave "MDSIGN" (Full access) por uma só de envio para `mdsign.app` e decidir
-     o SMTP do login (Auth).
+   - E-mails de login (Auth) pelo SMTP do Resend (`smtp.resend.com:465`, usuário `resend`, chave
+     própria "MDSign Login"), configurado no painel do Supabase; modelos em português de
+     `supabase/templates` publicados com `npx supabase config push` (18/11/2026). O SMTP não está
+     no `config.toml`, de propósito: o push não mexe nele.
+   - Falta: trocar a chave "MDSIGN" das funções (Full access) por uma só de envio para `mdsign.app`.
    - O domínio `mail.mundodigitaltech.com.br`, que ficou pela metade no Resend, não é mais usado.
 2. **Certificado digital: "Invalid license"** ao assinar com A3 dentro do quadro embutido.
    Hipótese: a licença do Web PKI cobre só `sign.signdocmd.com.br`. Próximo teste: assinar o mesmo
