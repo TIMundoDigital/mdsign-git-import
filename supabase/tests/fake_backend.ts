@@ -121,6 +121,9 @@ function splitSelect(select: string): string[] {
  * Colunas simples e tabelas embutidas "muitos-para-um" (ex.: organizations(name, locale)),
  * ligadas pela coluna <tabela no singular>_id do registro.
  */
+/** Ligações cuja coluna não segue o padrão <tabela no singular>_id. */
+const FK_ALIAS: Record<string, string> = { document_participants: "participant_id" };
+
 function project(row: Row, select: string | null, tables: Record<string, Row[]>): Row {
   if (!select || select === "*") return { ...row };
   const out: Row = {};
@@ -131,7 +134,7 @@ function project(row: Row, select: string | null, tables: Record<string, Row[]>)
       continue;
     }
     const [, rel, cols] = embed;
-    const fk = `${rel!.replace(/s$/, "")}_id`;
+    const fk = FK_ALIAS[rel!] ?? `${rel!.replace(/s$/, "")}_id`;
     if (!(fk in row)) throw new Error(`fake_backend: embutido sem ${fk}: ${part}`);
     const target = (tables[rel!] ?? []).find((r) => r["id"] === row[fk]);
     out[rel!] = target ? project(target, cols!, tables) : null;

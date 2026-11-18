@@ -322,6 +322,30 @@ type QueueItem = {
   } | null;
 };
 
+/**
+ * Idioma de quem recebe: quem tem conta no MDSign recebe no idioma do perfil; os demais, no idioma
+ * do documento. Uma consulta por rodada; se falhar, todos seguem o idioma do documento.
+ */
+async function recipientLocales(queue: QueueItem[]) {
+  const out = new Map<string, string>();
+  const emails = [
+    ...new Set(
+      queue
+        .filter((n) => n.channel === "email" && n.document_participants?.email)
+        .map((n) => n.document_participants!.email.trim().toLowerCase()),
+    ),
+  ];
+  if (!emails.length) return out;
+  const { data, error } = await admin.rpc("recipient_locales", { p_emails: emails });
+  if (error) {
+    console.error("recipient_locales", error.message);
+    return out;
+  }
+  for (const r of (data ?? []) as { email: string; locale: string }[])
+    if (["pt", "en", "es"].includes(r.locale)) out.set(r.email, r.locale);
+  return out;
+}
+
 async function sendQueue(
   queue: QueueItem[],
   out: { sent: number; failed: number; skipped: number; blocked: number },
@@ -347,6 +371,7 @@ async function sendQueue(
   let emailThisRun = 0;
   let emailToday: number | null = null;
   const senderNames = new Map<string, string>();
+  const recipientLocale = await recipientLocales(queue);
 
   for (const n of queue) {
     const provider = n.channel === "email" ? "resend" : "botconversa";
@@ -429,7 +454,7 @@ async function sendQueue(
         });
         const mail = signatureEmail({
           kind: n.kind,
-          locale: d.email_locale,
+          locale: recipientLocale.get(p.email.trim().toLowerCase()) ?? d.email_locale,
           role: p.role,
           name: p.name,
           senderName: sender,

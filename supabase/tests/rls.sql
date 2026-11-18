@@ -2027,4 +2027,22 @@ do $$ begin
 end $$;
 reset role;
 
+-- Idioma de quem recebe: o servidor consulta pelo e-mail (sem diferenciar maiúsculas); usuário não.
+do $$ begin
+  assert (select locale from public.recipient_locales(array['ANA@teste.mdsign', 'ninguem@teste.mdsign'])
+          where email = 'ana@teste.mdsign') is not null, 'idioma de quem tem conta';
+  assert (select count(*) from public.recipient_locales(array['ninguem@teste.mdsign'])) = 0,
+    'sem conta, sem idioma (fica o do documento)';
+end $$;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-00000000000a","role":"authenticated"}', true);
+set local role authenticated;
+do $$ begin
+  begin
+    perform public.recipient_locales(array['bruno@teste.mdsign']);
+    raise exception 'FALHOU: usuário consultou o idioma de outra pessoa';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+reset role;
+
 select 'todos os testes de RLS e permissões passaram' as resultado;
