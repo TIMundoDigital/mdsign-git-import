@@ -190,8 +190,11 @@ Não há clientes reais: todas as contas são de teste.
    - Chave nova "MDSign" (só envio, só `mdsign.app`) e remetente `MDSign <no-reply@mdsign.app>`
      gravados por `scripts/resend-key.sh`. A caixa `no-reply@mdsign.app` fica no **Titan**: não
      criar o MX de recebimento do Resend nem mexer nos registros do Titan.
-   - Falta: religar o e-mail próprio da Cardosos em Notificações, testar um envio ("entregue/aberto"
-     na linha do tempo), apagar a chave antiga "Onboarding" e decidir o SMTP do login (Auth).
+   - Testado em 18/11/2026: e-mail próprio da Cardosos religado; lembrete enviado, entregue e
+     aberto. O Microsoft 365 mandou a primeira mensagem para o Lixo Eletrônico (domínio novo).
+     Chaves antigas apagadas.
+   - Falta: trocar a chave "MDSIGN" (Full access) por uma só de envio para `mdsign.app` e decidir
+     o SMTP do login (Auth).
    - O domínio `mail.mundodigitaltech.com.br`, que ficou pela metade no Resend, não é mais usado.
 2. **Certificado digital: "Invalid license"** ao assinar com A3 dentro do quadro embutido.
    Hipótese: a licença do Web PKI cobre só `sign.signdocmd.com.br`. Próximo teste: assinar o mesmo
