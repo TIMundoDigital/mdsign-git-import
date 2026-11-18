@@ -48,3 +48,21 @@ liberados, separados por vírgula. Sem o segredo, só e-mail.
   documentos; depois, testar um método por vez (seção "Para liberar um nível").
 - Não confundir: **código por WhatsApp na assinatura** (SignDoc) × **convite e lembrete por
   WhatsApp** (MDSign pelo BotConversa, funcionalidade `whatsapp`, hoje oculta).
+
+## Testes reais de 18/11/2026 (homologação)
+
+A Lacuna informou que SMS, WhatsApp e selfie estavam habilitados. `SIGNDOC_AUTH_METHODS` foi
+gravado com `sms,whatsapp,selfie` para os testes, todos feitos pela responsável com o próprio
+celular, numa organização com o e-mail próprio desligado (convites pelo SignDoc).
+
+| Método | Envio | Resultado |
+|---|---|---|
+| Selfie (`identity`) | 11h43 | Concluído |
+| SMS (`reinforced`) | 11h52 | Concluído |
+| WhatsApp (`reinforced_whatsapp`) | 11h52 | Recusado pelo motor na criação: `RequireWhatsappAuthenticationToSignElectronically: The authentication by Whatsapp is disabled` (HTTP 400; nada criado nem cobrado) |
+
+- Segredo atual: **`SIGNDOC_AUTH_METHODS=sms,selfie`**. O WhatsApp volta quando a Lacuna o
+  habilitar no contexto padrão (pedido feito com a mensagem acima) e um novo teste passar.
+- Pendente: conferir na "Versão para impressão" se a página de assinaturas cita o método usado.
+- Ainda sem decisão: em quais planos cada método entra (hoje valem para todos) e se o código por
+  e-mail deve ser dispensado quando houver SMS (`disableEmailAuthenticationToSignElectronically`).
