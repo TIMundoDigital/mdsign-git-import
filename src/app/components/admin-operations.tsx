@@ -268,3 +268,98 @@ export function PlatformAlerts({
     </section>
   );
 }
+
+type EngineCheck = {
+  offered: string[];
+  engine: {
+    context: string | null;
+    certificate: boolean | null;
+    livenessOnSelfie: boolean | null;
+    methods: Record<string, boolean | null>;
+  } | null;
+  reason: "no_documents" | "no_context" | null;
+  checkedAt?: string;
+};
+
+/** Métodos de autenticação: o que o SignDoc aceita × o que o MDSign oferece (só leitura). */
+export function EngineMethods({
+  fmtDate,
+}: {
+  fmtDate: (v: string | null, withTime?: boolean) => string;
+}) {
+  const { t } = useAppI18n();
+  const x = t.admin.engineMethods;
+  const [data, setData] = useState<EngineCheck | null>(null);
+  const [busy, setBusy] = useState(false);
+  const check = async () => {
+    setBusy(true);
+    try {
+      setData(await callFunction<EngineCheck>("admin-engine-check", {}));
+    } catch (e) {
+      toast.error(errorText(t, e));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const yesNo = (v: boolean | null | undefined) => (v == null ? x.unknown : v ? x.yes : x.no);
+  // Nome no segredo SIGNDOC_AUTH_METHODS × nome no SignDoc.
+  const offeredKey: Record<string, string> = { liveness: "liveness", idScan: "idscan" };
+  const offers = (k: string) =>
+    k === "email" || (data?.offered ?? []).includes(offeredKey[k] ?? k.toLowerCase());
+  return (
+    <section className="mt-6 rounded-2xl border bg-white shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b p-4">
+        <div>
+          <h2 className="font-display text-lg font-semibold">{x.title}</h2>
+          <p className="text-sm text-muted-foreground">{x.hint}</p>
+        </div>
+        <Button variant="outline" onClick={() => void check()} disabled={busy}>
+          {busy && <Loader2 className="animate-spin" aria-hidden />}
+          {x.check}
+        </Button>
+      </div>
+      {data && (
+        <div className="grid gap-3 p-4 text-sm" aria-live="polite">
+          {data.reason === "no_documents" && <p>{x.noDocuments}</p>}
+          {data.reason === "no_context" && <p>{x.noContext}</p>}
+          {data.engine && (
+            <>
+              <p>
+                {x.context}: <strong>{data.engine.context ?? x.unknown}</strong> · {x.certificate}:{" "}
+                <strong>{yesNo(data.engine.certificate)}</strong> · {x.livenessOnSelfie}:{" "}
+                <strong>{yesNo(data.engine.livenessOnSelfie)}</strong>
+              </p>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead className="text-muted-foreground">
+                    <tr>
+                      <th className="p-2 font-medium">{x.method}</th>
+                      <th className="p-2 font-medium">{x.engineCol}</th>
+                      <th className="p-2 font-medium">{x.offeredCol}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {Object.entries(data.engine.methods).map(([k, v]) => (
+                      <tr key={k}>
+                        <td className="p-2">{x.names[k] ?? k}</td>
+                        <td className={cn("p-2", v ? "text-emerald-700" : "text-muted-foreground")}>
+                          {yesNo(v)}
+                        </td>
+                        <td className="p-2">{offers(k) ? x.yes : x.no}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+          {data.checkedAt && (
+            <p className="text-xs text-muted-foreground">
+              {x.checkedAt} {fmtDate(data.checkedAt, true)}
+            </p>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}

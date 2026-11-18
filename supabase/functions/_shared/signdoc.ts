@@ -49,6 +49,17 @@ export type EngineDocument = {
   observers?: { id: string; user?: { name?: string; email?: string } }[];
   /** Código de validação (impresso na página de assinaturas do PDF). */
   key?: string | null;
+  /** Contexto de segurança da instância: métodos que o motor aceita. */
+  securityContext?: EngineSecurityContext | null;
+};
+
+export type EngineSecurityContext = {
+  id?: string;
+  name?: string | null;
+  portugueseName?: string | null;
+  allowDigitalSignature?: boolean;
+  allowedElectronicTypes?: Record<string, boolean> | null;
+  requireLivenessOnSelfieAuthentication?: boolean;
 };
 
 /** Assinatura como o motor devolve na validação (só os campos que o MDSign usa). */

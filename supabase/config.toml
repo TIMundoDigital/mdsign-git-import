@@ -525,5 +525,9 @@ verify_jwt = false
 [functions.admin-whatsapp-test]
 verify_jwt = false
 
+# Super Admin: conferência só de leitura dos métodos do SignDoc (valida o login no código).
+[functions.admin-engine-check]
+verify_jwt = false
+
 [functions.document-validate]
 verify_jwt = false

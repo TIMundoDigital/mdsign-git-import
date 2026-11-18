@@ -19,7 +19,12 @@ import { toast } from "sonner";
 import { AuthProvider, useAuth } from "@/app/auth";
 import { AdminDataRequests } from "@/app/components/admin-data-requests";
 import { CommercialAdmin } from "@/app/components/admin-commercial";
-import { BillingAdmin, EngineErrors, PlatformAlerts } from "@/app/components/admin-operations";
+import {
+  BillingAdmin,
+  EngineErrors,
+  EngineMethods,
+  PlatformAlerts,
+} from "@/app/components/admin-operations";
 import { GrowthModule } from "@/app/growth/module";
 import { PlansAdminModule } from "@/app/plans-admin/module";
 import { usePlansAdminTexts } from "@/app/plans-admin/texts";
@@ -327,6 +332,7 @@ function AdminPage() {
           <PlatformAlerts fmtDate={fmtDate} />
           <Overview orgs={orgs} health={health} planName={planName} fmtDate={fmtDate} />
           <EngineErrors fmtDate={fmtDate} />
+          <EngineMethods fmtDate={fmtDate} />
         </TabsContent>
 
         <TabsContent value="growth" className="mt-4">
