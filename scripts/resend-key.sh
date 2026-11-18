@@ -11,9 +11,9 @@ case "$KEY" in
   re_*) ;;
   *) echo "A chave do Resend começa com re_. Nada foi gravado."; exit 1 ;;
 esac
-read -r -p "Remetente (ex.: MDSign <nao-responda@mdsign.com.br>): " FROM
+read -r -p "Remetente (ex.: MDSign <no-reply@mdsign.app>): " FROM
 if [ -z "$FROM" ]; then echo "Remetente vazio. Nada foi gravado."; exit 1; fi
 
-npx supabase secrets set RESEND_API_KEY="$KEY" EMAIL_FROM="$FROM" >/dev/null
+npx supabase secrets set --yes RESEND_API_KEY="$KEY" EMAIL_FROM="$FROM" >/dev/null
 unset KEY
 echo "Chave do Resend e remetente gravados nos segredos do Supabase."

@@ -185,14 +185,14 @@ Não há clientes reais: todas as contas são de teste.
 
 ## 7. Próximos passos
 
-1. **Domínio de e-mail no Resend: `mail.mundodigitaltech.com.br`** (DNS na HostGator).
-   - CNAMEs `rsend.mail` e `send.mail` já estão OK.
-   - Faltam os TXT do DKIM (`resend._domainkey.mail.mundodigitaltech.com.br.`, valor `p=…` do
-     Resend) e do DMARC (`_dmarc.mundodigitaltech.com.br.`, `v=DMARC1; p=none;`). No cPanel,
-     clicar em "Save All Records". Não mexer nos registros `octa-mails` nem `ock*._domainkey`.
-   - Depois de "Verified": trocar a chave do Resend, definir o remetente com
-     `bash scripts/resend-key.sh` (`MDSign <nao-responda@mail.mundodigitaltech.com.br>`) e testar
-     um envio, conferindo "entregue/aberto" na linha do tempo.
+1. **E-mail pelo Resend com o domínio `mdsign.app`** (DNS na HostGator), verificado em
+   18/11/2026, região São Paulo, rastreio de abertura em `links.mdsign.app` (cliques desligados).
+   - Chave nova "MDSign" (só envio, só `mdsign.app`) e remetente `MDSign <no-reply@mdsign.app>`
+     gravados por `scripts/resend-key.sh`. A caixa `no-reply@mdsign.app` fica no **Titan**: não
+     criar o MX de recebimento do Resend nem mexer nos registros do Titan.
+   - Falta: religar o e-mail próprio da Cardosos em Notificações, testar um envio ("entregue/aberto"
+     na linha do tempo), apagar a chave antiga "Onboarding" e decidir o SMTP do login (Auth).
+   - O domínio `mail.mundodigitaltech.com.br`, que ficou pela metade no Resend, não é mais usado.
 2. **Certificado digital: "Invalid license"** ao assinar com A3 dentro do quadro embutido.
    Hipótese: a licença do Web PKI cobre só `sign.signdocmd.com.br`. Próximo teste: assinar o mesmo
    documento direto no SignDoc. Se funcionar, pedir à Lacuna a inclusão do domínio do MDSign ou

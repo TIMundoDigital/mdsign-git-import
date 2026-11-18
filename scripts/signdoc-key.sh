@@ -30,5 +30,5 @@ chmod 600 "$ENV_FILE"
 trap 'rm -f "$ENV_FILE"' EXIT
 printf 'SIGNDOC_API_KEY=%s\n' "$KEY" > "$ENV_FILE"
 unset KEY
-npx supabase secrets set --env-file "$ENV_FILE" >/dev/null
+npx supabase secrets set --yes --env-file "$ENV_FILE" >/dev/null
 echo "Chave nova gravada nos segredos do Supabase (vale para as funções na próxima chamada)."

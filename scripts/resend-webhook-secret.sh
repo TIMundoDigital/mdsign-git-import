@@ -18,6 +18,6 @@ if [[ "$SECRET" != whsec_* ]]; then
   echo "O segredo precisa começar com whsec_. Nada foi gravado."
   exit 1
 fi
-npx supabase secrets set RESEND_WEBHOOK_SECRET="$SECRET" >/dev/null
+npx supabase secrets set --yes RESEND_WEBHOOK_SECRET="$SECRET" >/dev/null
 unset SECRET
 echo "Segredo gravado. O Resend já pode enviar os avisos."

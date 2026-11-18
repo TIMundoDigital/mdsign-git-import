@@ -19,6 +19,6 @@ case "$STATUS" in
   *) echo "Não foi possível conferir a chave (HTTP $STATUS). Nada foi gravado."; exit 1 ;;
 esac
 
-npx supabase secrets set BOTCONVERSA_API_KEY="$KEY" >/dev/null
+npx supabase secrets set --yes BOTCONVERSA_API_KEY="$KEY" >/dev/null
 unset KEY
 echo "Chave do BotConversa conferida e gravada nos segredos do Supabase."

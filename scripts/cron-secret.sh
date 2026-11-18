@@ -36,7 +36,7 @@ npx supabase db query --linked -f "$TMP_DIR/vault.sql" >/dev/null
 
 # 2. Segredo das funções.
 printf 'CRON_SECRET=%s\n' "$SECRET" > "$TMP_DIR/cron.env"
-npx supabase secrets set --env-file "$TMP_DIR/cron.env" >/dev/null
+npx supabase secrets set --yes --env-file "$TMP_DIR/cron.env" >/dev/null
 
 unset SECRET
 echo "Senha das rotinas gravada no Vault e em CRON_SECRET (mesmo valor)."

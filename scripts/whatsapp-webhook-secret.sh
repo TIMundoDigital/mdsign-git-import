@@ -7,7 +7,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 SECRET=$(openssl rand -hex 32)
-npx supabase secrets set WHATSAPP_WEBHOOK_SECRET="$SECRET" >/dev/null
+npx supabase secrets set --yes WHATSAPP_WEBHOOK_SECRET="$SECRET" >/dev/null
 REF="vrksxqbopteeyeovdwpu"
 
 echo
