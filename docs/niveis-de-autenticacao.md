@@ -68,3 +68,18 @@ celular, numa organização com o e-mail próprio desligado (convites pelo SignD
   só o certificado depende de `certificate_signature`).
 - Ainda sem decisão: se o código por e-mail deve ser dispensado quando houver SMS
   (`disableEmailAuthenticationToSignElectronically`).
+
+## Certificado digital (18/11/2026)
+
+- Segredo atual: **`SIGNDOC_AUTH_METHODS=sms,selfie,certificate`**.
+- O nível "Certificado digital ICP-Brasil" (`qualified`) manda `allowElectronicSignature: false`:
+  o quadro do SignDoc mostra só "Assinar com certificado digital", sem o botão de assinatura
+  eletrônica. Confirmado pela responsável em 18/11/2026 (envio das 12h40).
+- Duas travas, as duas precisam estar liberadas: o segredo acima (motor) **e** o recurso
+  `certificate_signature` como **funcional** em Super Admin → Planos & Funcionalidades (matriz
+  comercial). Recurso "em desenvolvimento" fica oculto em todos os planos, e o servidor recusa.
+  Marcado como funcional pela responsável em 18/11/2026.
+- Planos: Jacarandá, Ipê e Mogno (Cedro em prévia). A tela só oferece o nível nesses planos.
+- Pendente: concluir a assinatura com o certificado (A1/A3) e conferir se o erro "Invalid
+  license" do Web PKI não aparece no quadro embutido. Se aparecer, voltar o recurso para
+  "em desenvolvimento".

@@ -155,10 +155,13 @@ Não há clientes reais: todas as contas são de teste.
   `RESEND_WEBHOOK_SECRET`; eventos `notification.sent` (com `data.channel`), `notification.delivered`,
   `notification.failed`, `participant.email_opened`, `participant.viewed`; os erros `resend_403` e
   `resend_422` encerram na hora com o motivo `test_sender` ou `provider_rejected`.
-- **Assinatura com certificado:** no nível normal, o MDSign manda `allowElectronicSignature: true`
-  e o SignDoc oferece o certificado; o nível "qualified" só aparece se o segredo
-  `SIGNDOC_AUTH_METHODS` contiver `certificate` (esse segredo não existe hoje) e só vale nos
-  planos com `certificate_signature`.
+- **Autenticação do signatário:** `SIGNDOC_AUTH_METHODS=sms,selfie,certificate` (18/11/2026).
+  SMS e selfie homologados com envio real, em todos os planos; WhatsApp recusado pelo motor
+  ("disabled"), aguardando a Lacuna. Certificado (`qualified`, só certificado, sem assinatura
+  eletrônica) depende também de `certificate_signature` funcional na matriz (Jacarandá em diante).
+  Conferência dos métodos no Super Admin (`admin-engine-check`). Ver `docs/niveis-de-autenticacao.md`.
+- **Cancelamento:** justificativa obrigatória (5+ caracteres) na tela e no servidor; vai ao
+  SignDoc e aparece na linha do tempo (`statusUpdateReason`). Pela API continua opcional.
 - **Estrangeiros sem CPF:** código pronto (`SIGNDOC_IDENTIFIER_OPTIONAL=true` mais
   `CountryIdentifierMode=Nullable` no SignDoc). Só tratar na versão final.
 
