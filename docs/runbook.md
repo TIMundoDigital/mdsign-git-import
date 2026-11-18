@@ -183,6 +183,15 @@ A verificação do GitHub tem três etapas:
 
 ---
 
+### Limite por IP nas funções públicas (verificado em 18/11/2026)
+
+As funções públicas (`document-validate`, `public-form`, `data-request`, `lead-submit`,
+`growth-track`) limitam pedidos pelo **primeiro** IP do `x-forwarded-for`. Teste com uma função
+temporária (já removida): a infraestrutura do Supabase **descarta** o `x-forwarded-for` enviado por
+quem chama e monta o próprio, cujo primeiro IP é o real (igual ao `cf-connecting-ip`). Um IP
+inventado não chega à função, então o limite não é driblado assim. Se a hospedagem mudar (outro
+proxy na frente), repetir o teste antes de confiar nesse cabeçalho.
+
 ## 6. Segredos (só os nomes; valores ficam no cofre)
 
 | Segredo | Para que serve | Como trocar |
