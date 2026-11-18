@@ -33,7 +33,7 @@
   (`src/lib/supabase.ts`, `src/config/site.ts`, `src/lib/security-headers.ts`) e os scripts
   apontam para ele. Um build com `VITE_ENVIRONMENT=production` exige os endereços de produção e
   recusa os da homologação (`src/config/build-check.ts`).
-- Em 18/11/2026: 69 migrações no repositório, 27 funções e os 13 segredos de sempre.
+- Em 18/11/2026: 70 migrações no repositório, 27 funções e os 13 segredos de sempre.
 - Publicação, conferência e recuperação: **`docs/runbook.md`**. Auditoria de 17/11/2026:
   `AUDITORIA-MDSIGN.md` (fora do Git).
 - A `20261016180000_rotinas_endereco_no_cofre.sql` faz as rotinas lerem o endereço das funções do
@@ -56,7 +56,7 @@
 
 - `npx tsc --noEmit -p .` e `npx eslint --fix <arquivos>`. Se `src/test/consent.test.ts` mudar,
   restaure.
-- `npx vitest run` (102 testes passando em 18/11/2026).
+- `npx vitest run` (104 testes passando em 18/11/2026).
 - `bash scripts/test-rls.sh [migrações]`: suíte de RLS com rollback (`supabase/tests/rls.sql`),
   contra a homologação (pede o "sim", porque escreve e desfaz).
 - `supabase/tests/comercial.sql`: regras comerciais, 23/23, numa transação desfeita no fim.
@@ -65,7 +65,7 @@
 - **Testes e checagens Deno só numa cópia fora do repositório**, nunca na raiz (quebra o
   `node_modules`; nesse caso, `rm -rf node_modules && npx -y bun@1 install --frozen-lockfile`):
   `cp -R supabase /tmp/x && cd /tmp/x && SUPABASE_URL=http://127.0.0.1:9 SUPABASE_SERVICE_ROLE_KEY=teste SUPABASE_ANON_KEY=teste SIGNDOC_API_KEY=teste SIGNDOC_WEBHOOK_TOKEN=token-de-teste npx -y deno@2.9.6 test -A tests/`
-  (62 testes em 18/11/2026; banco, login, SignDoc, Asaas, Resend e Storage simulados em
+  (63 testes em 18/11/2026; banco, login, SignDoc, Asaas, Resend e Storage simulados em
   `supabase/tests/fake_backend.ts`).
 - CI do GitHub (`.github/workflows/ci.yml`): etapas verificar, servidor e banco. Resultado sem
   login pela API pública (limite de 60 consultas por hora).
