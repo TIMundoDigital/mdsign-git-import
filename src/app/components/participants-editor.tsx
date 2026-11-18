@@ -755,6 +755,11 @@ export function FlowEditor({
   fixedOrder?: boolean | undefined;
 }) {
   const { t } = useAppI18n();
+  const { mode } = useFeatures();
+  // Certificado digital só nos planos que o incluem (o servidor confere de novo ao enviar).
+  const levels = config.authLevels.filter(
+    (l) => l !== "qualified" || mode("certificate_signature") === "available",
+  );
   // Papel e autenticação valem para o grupo inteiro (quórum).
   const update = (i: number, patch: Partial<ParticipantDraft>) => {
     const key = value[i]?.rule?.key;
@@ -866,7 +871,7 @@ export function FlowEditor({
                   className={selectClass}
                   aria-invalid={bad?.includes("authLevel") || bad?.includes("phone")}
                 >
-                  {config.authLevels.map((level) => (
+                  {levels.map((level) => (
                     <option key={level} value={level}>
                       {t.participants.levels[level]}
                     </option>
