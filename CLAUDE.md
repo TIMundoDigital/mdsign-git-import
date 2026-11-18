@@ -31,8 +31,11 @@
 - O projeto `vrksxqbopteeyeovdwpu` é o mesmo de antes da migração: em vez de copiar os dados, ele
   foi transferido da conta pessoal para a organização da MDTech. Os valores padrão do código
   (`src/lib/supabase.ts`, `src/config/site.ts`, `src/lib/security-headers.ts`) e os scripts
-  apontam para ele. Conferido em 11/11/2026: 56 migrações aplicadas, 27 funções ativas e os 13
-  segredos cadastrados.
+  apontam para ele. Um build com `VITE_ENVIRONMENT=production` exige os endereços de produção e
+  recusa os da homologação (`src/config/build-check.ts`).
+- Em 18/11/2026: 69 migrações no repositório, 27 funções e os 13 segredos de sempre.
+- Publicação, conferência e recuperação: **`docs/runbook.md`**. Auditoria de 17/11/2026:
+  `AUDITORIA-MDSIGN.md` (fora do Git).
 - A `20261016180000_rotinas_endereco_no_cofre.sql` faz as rotinas lerem o endereço das funções do
   Vault (`mdsign_functions_url`). **Não editar migrações já aplicadas.**
 - O projeto `ymseserdiwecgaueycwi` (criado em 05/11/2026 para ser a homologação) nunca teve
@@ -53,12 +56,19 @@
 
 - `npx tsc --noEmit -p .` e `npx eslint --fix <arquivos>`. Se `src/test/consent.test.ts` mudar,
   restaure.
-- `npx vitest run` (98 testes passando em 27/10/2026).
-- `bash scripts/test-rls.sh [migrações]`: suíte de RLS com rollback (`supabase/tests/rls.sql`).
+- `npx vitest run` (102 testes passando em 18/11/2026).
+- `bash scripts/test-rls.sh [migrações]`: suíte de RLS com rollback (`supabase/tests/rls.sql`),
+  contra a homologação (pede o "sim", porque escreve e desfaz).
 - `supabase/tests/comercial.sql`: regras comerciais, 23/23, numa transação desfeita no fim.
-- **Checagens Deno só numa cópia fora do repositório** (`npx -y deno@2.9.6 check ...`), nunca na
-  raiz. Rodar na raiz quebra o `node_modules`; nesse caso,
-  `rm -rf node_modules && npx -y bun@1 install --frozen-lockfile`.
+- `bash scripts/test-db-local.sh`: as duas suítes num banco local descartável (CI; no Mac exige
+  Docker).
+- **Testes e checagens Deno só numa cópia fora do repositório**, nunca na raiz (quebra o
+  `node_modules`; nesse caso, `rm -rf node_modules && npx -y bun@1 install --frozen-lockfile`):
+  `cp -R supabase /tmp/x && cd /tmp/x && SUPABASE_URL=http://127.0.0.1:9 SUPABASE_SERVICE_ROLE_KEY=teste SUPABASE_ANON_KEY=teste SIGNDOC_API_KEY=teste SIGNDOC_WEBHOOK_TOKEN=token-de-teste npx -y deno@2.9.6 test -A tests/`
+  (62 testes em 18/11/2026; banco, login, SignDoc, Asaas, Resend e Storage simulados em
+  `supabase/tests/fake_backend.ts`).
+- CI do GitHub (`.github/workflows/ci.yml`): etapas verificar, servidor e banco. Resultado sem
+  login pela API pública (limite de 60 consultas por hora).
 - `npx vite build`.
 - Servidor local: `.claude/launch.json` → "mdsign" na porta 5188.
 
@@ -78,13 +88,14 @@
 8. **Sem migrações destrutivas.** Só acréscimos.
 9. **Não modificar o motor SignDoc.**
 10. **Deploy de banco e funções** (`supabase db push`, `supabase functions deploy`):
-    - padrão: a responsável roda no Terminal do Mac; o Claude entrega o comando pronto, por exemplo
-      `for f in A B C; do npx supabase functions deploy $f --use-api || break; done`;
-    - em sessões na nuvem, o Claude pode aplicar pelo conector do Supabase, **só depois do "sim"**
-      e só no projeto de homologação;
-    - para saber quais funções publicar, faça um grep dos imports de `_shared/`;
-    - depois, conferir com `npx supabase migration list --linked`,
-      `npx supabase functions list -o json` e consultas só de leitura;
+    - o Claude pode aplicar pelo CLI do Mac (que exige `--yes`), **só depois do "sim"** e só no
+      projeto de homologação; a responsável também pode rodar o comando pronto no Terminal, por
+      exemplo `for f in A B C; do npx supabase functions deploy $f --use-api || break; done`;
+    - antes de aplicar migração: rodar a suíte de RLS com ela (desfeita no fim) e
+      `npx supabase db push --remote --dry-run`, que deve listar só a migração nova;
+    - para saber quais funções publicar, siga os imports de `_shared/` (diretos e indiretos);
+    - depois, conferir com `npx supabase migration list --remote`,
+      `npx supabase functions list -o json` e consultas só de leitura (`--read-only`);
     - **ordem segura:** migração → funções → `git fetch` (rebase se houver commit novo do Lovable,
       depois testes) → push (com o "sim") → Publish/Update no Lovable.
 
@@ -115,18 +126,39 @@ Não há clientes reais: todas as contas são de teste.
   (rejeição definitiva). Recusa feita na tela do SignDoc conta como devolução.
 - A devolução aceita nova versão: `document_versions` guarda o sha256 de cada uma, e o motor
   reinicia o fluxo.
-- `document_events` e `document_versions` são **imutáveis** (trigger bloqueia update).
+- `document_events` e `document_versions` são **imutáveis**: gatilhos bloqueiam alteração e
+  exclusão, inclusive pelo servidor.
+- **Ligação com o motor** (`_shared/engine-link.ts`): participante ligado à ação do SignDoc pelo
+  e-mail, pelo CPF ou pela posição na etapa; a sincronização religa quem ficou sem vínculo; o
+  alerta `documents_incomplete` aponta o que não fechar.
+- **Filas** (notificações, webhooks de saída, eventos do motor) com reserva
+  (`claim_*`, `locked_until`): duas execuções ao mesmo tempo não enviam em dobro.
+- **Identificador de envio** obrigatório nas telas (envio, modelo, Só eu assino, formulário
+  público): repetir a chamada devolve o mesmo documento.
+- **Plano e usuários:** o limite vale no convite, no aceite e na reativação; troca voluntária para
+  plano menor é recusada se não couber; em plano menor forçado, os excedentes são suspensos e
+  voltam sozinhos quando o plano comporta (gatilho em `subscriptions`).
+- **Cobrança (Asaas):** estorno e chargeback suspendem; conta suspensa recebe aviso por e-mail e
+  volta ao Cedro **15 dias depois do aviso** (`billing_grace.downgrade_days`); sem aviso enviado,
+  não muda.
+- **Encerramento de conta:** sem download obrigatório; confirmação de ciência registrada na
+  auditoria; no 60º dia a exclusão cobre também cópias, fluxos salvos, anexos, pastas e unidades.
+- **Verificação em duas etapas:** quem ativou só acessa os dados (também pela API) com a sessão
+  confirmada (`mfa_ok`).
+- **Webhooks de saída:** só para endereços públicos (`_shared/ssrf.ts`).
+- **Alertas da plataforma** também por e-mail aos Super Admins, uma vez por abertura.
 - **Etapas** (`cleanParticipants` em `_shared/participants.ts`): sem ordem, aprovadores na
   etapa 1 e demais na etapa 2; com ordem, cada pessoa ou grupo de quórum é uma etapa.
 - **Posições no PDF:** **uma assinatura por pessoa** (o SignDoc recusa mais de uma). Rubrica e
   carimbo podem repetir. Validação na tela e no servidor (`assertOneSignature` em `_shared/pdf.ts`).
 - **E-mail:** `notifications.opened_at`; o webhook `resend-webhook` verifica a assinatura Svix com
-  `RESEND_WEBHOOK_SECRET`; eventos `notification.sent.<canal>`, `notification.delivered`,
+  `RESEND_WEBHOOK_SECRET`; eventos `notification.sent` (com `data.channel`), `notification.delivered`,
   `notification.failed`, `participant.email_opened`, `participant.viewed`; os erros `resend_403` e
   `resend_422` encerram na hora com o motivo `test_sender` ou `provider_rejected`.
 - **Assinatura com certificado:** no nível normal, o MDSign manda `allowElectronicSignature: true`
   e o SignDoc oferece o certificado; o nível "qualified" só aparece se o segredo
-  `SIGNDOC_AUTH_METHODS` contiver `certificate` (esse segredo não existe hoje).
+  `SIGNDOC_AUTH_METHODS` contiver `certificate` (esse segredo não existe hoje) e só vale nos
+  planos com `certificate_signature`.
 - **Estrangeiros sem CPF:** código pronto (`SIGNDOC_IDENTIFIER_OPTIONAL=true` mais
   `CountryIdentifierMode=Nullable` no SignDoc). Só tratar na versão final.
 
@@ -140,6 +172,13 @@ Não há clientes reais: todas as contas são de teste.
 - **Enviar cópia** de documento concluído: função `document-share`, tabela `document_shares`,
   página `/d/$token`, até 10 e-mails e link de 7 dias.
 - Chave "Assinar em ordem" no passo 2 do envio.
+
+## 6b. Entregas de 11 a 18/11/2026
+
+- Migração encerrada; site em `mdsign-new.lovable.app`; políticas aprovadas pelo Jurídico
+  publicadas (Termos 3.0, Privacidade 1.0, Cedro 1.0, vigentes em 17/11/2026, aceite `2026-11`).
+- Itens da auditoria: D-01, D-12, P0-5 a P0-9, P0-13, P1-1 a P1-4, P1-6 a P1-9, P1-11, P1-12 e
+  correções menores (ver `git log`). ZIP em lote com escolha de PDF assinado ou para impressão.
 
 ## 7. Próximos passos
 
@@ -156,12 +195,13 @@ Não há clientes reais: todas as contas são de teste.
    documento direto no SignDoc. Se funcionar, pedir à Lacuna a inclusão do domínio do MDSign ou
    abrir a assinatura com certificado em nova aba; se falhar, abrir chamado na Lacuna. Até lá, o
    site diz "ICP-Brasil em breve".
-3. **ZIP em lote:** escolher o tipo de arquivo (PDF assinado ou versão para impressão). A função
-   `documents-zip` já aceita `version: "printable"`; falta a escolha na tela
-   (`src/routes/app/_shell/documents/index.tsx`, função `downloadSelected`).
+3. **P0-12, roteiros de homologação** com envios reais (a responsável pediu para deixar para
+   depois).
 4. **Outras pendências:**
-   - revisão jurídica dos Termos (minutas com `LEGAL_DRAFT` em `src/content/legal.ts`) e
-     indicação do DPO;
+   - indicação do DPO, prazos de retenção por categoria e mecanismo de transferência
+     internacional (pontos em aberto nas notas do Jurídico); avisar o Jurídico de que a seção 8
+     dos Termos foi publicada com a matriz vigente;
+   - segundo responsável com acesso e cofre corporativo de senhas (`docs/runbook.md`);
    - testar SMS, WhatsApp e selfie antes de liberar em `SIGNDOC_AUTH_METHODS`;
    - restrição de acesso por pasta (ainda não pedida);
    - GTM (`VITE_GTM_ID`), domínio de produção (`VITE_SITE_URL` e `ALLOWED_ORIGINS`) e banco em
