@@ -188,6 +188,56 @@ Deno.test("webhooks: nome que aponta para endereço interno é recusado", async 
   assertEquals(await isPublicHost("cliente.com.br", null), true);
 });
 
+Deno.test(
+  "webhooks: endereços disfarçados (como o servidor os reescreve) são recusados",
+  async () => {
+    // IPv6 com IPv4 embutido em hexadecimal, NAT64, 6to4, Teredo, notações curtas do IPv4 etc.
+    for (const url of [
+      "https://[::ffff:127.0.0.1]/",
+      "https://[::ffff:7f00:1]/",
+      "https://[::ffff:a9fe:a9fe]/",
+      "https://[::127.0.0.1]/",
+      "https://[64:ff9b::a9fe:a9fe]/",
+      "https://[64:ff9b:1::1]/",
+      "https://[2002:7f00:1::]/",
+      "https://[2001:0:4136:e378::1]/",
+      "https://[fec0::1]/",
+      "https://[::ffff:0:0]/",
+      "https://[0:0:0:0:0:0:0:1]/",
+      "https://[::]/",
+      "https://2130706433/",
+      "https://0x7f000001/",
+      "https://0177.0.0.1/",
+      "https://127.1/",
+      "https://localhost./",
+      "https://LOCALHOST/",
+    ])
+      assertEquals(await isPublicHost(new URL(url).hostname, null), false, url);
+    for (const url of [
+      "https://[2001:4860:4860::8888]/",
+      "https://[::ffff:8.8.8.8]/",
+      "https://8.8.8.8/",
+    ])
+      assertEquals(await isPublicHost(new URL(url).hostname, null), true, url);
+    // DNS que devolve IPv6 com IPv4 interno embutido.
+    const resolver = (host: string, type: "A" | "AAAA") => {
+      if (host === "embutido.com" && type === "AAAA") return Promise.resolve(["::ffff:a9fe:a9fe"]);
+      const e = new Error("no records");
+      e.name = "NotFound";
+      return Promise.reject(e);
+    };
+    assertEquals(
+      await isPublicHost("embutido.com", resolver),
+      false,
+      "IPv4 interno dentro do IPv6",
+    );
+    assertEquals(await isPublicHost("nao-existe.com", resolver), false, "nome sem registro no DNS");
+    // Erro do DNS que não é "não encontrado": ambiente sem DNS, vale o texto.
+    const down = () => Promise.reject(new Error("PermissionDenied"));
+    assertEquals(await isPublicHost("cliente.com.br", down), true);
+  },
+);
+
 // ---------- Identificador de envio obrigatório nas telas (Q-2) ----------
 import { assertThrows } from "jsr:@std/assert@1";
 import { requiredKey } from "../functions/_shared/create.ts";

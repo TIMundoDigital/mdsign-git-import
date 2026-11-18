@@ -32,6 +32,31 @@ function v4ToInt(ip: string): number | null {
   return n;
 }
 
+/** IPv6 em 8 grupos de 16 bits (aceita "::" e IPv4 no fim). Texto inválido → null. */
+function v6Groups(ip: string): number[] | null {
+  let text = ip;
+  const dotted = /(\d+\.\d+\.\d+\.\d+)$/.exec(text);
+  if (dotted) {
+    const v4 = v4ToInt(dotted[1]!);
+    if (v4 === null) return null;
+    text =
+      text.slice(0, -dotted[1]!.length) +
+      `${(v4 >>> 16).toString(16)}:${(v4 & 0xffff).toString(16)}`;
+  }
+  const halves = text.split("::");
+  if (halves.length > 2) return null;
+  const part = (s: string) => (s ? s.split(":") : []);
+  const head = part(halves[0]!);
+  const tail = halves.length === 2 ? part(halves[1]!) : [];
+  const fill = 8 - head.length - tail.length;
+  if (halves.length === 1 ? head.length !== 8 : fill < 1) return null;
+  const all = [...head, ...Array(halves.length === 2 ? fill : 0).fill("0"), ...tail];
+  if (all.some((g) => !/^[0-9a-f]{1,4}$/.test(g))) return null;
+  return all.map((g) => parseInt(g, 16));
+}
+
+const v4From = (hi: number, lo: number) => `${hi >>> 8}.${hi & 0xff}.${lo >>> 8}.${lo & 0xff}`;
+
 /** IP privado, interno ou reservado (IPv4 ou IPv6). Texto que não é IP → false. */
 export function isPrivateIp(raw: string): boolean {
   const ip = raw.replace(/^\[|\]$/g, "").toLowerCase();
@@ -42,14 +67,27 @@ export function isPrivateIp(raw: string): boolean {
       return (v4 & mask) >>> 0 === start;
     });
   if (!ip.includes(":")) return false;
-  // IPv4 dentro do IPv6 (::ffff:10.0.0.1).
-  const mapped = /^(?:0*:)*:?ffff:(\d+\.\d+\.\d+\.\d+)$/.exec(ip);
-  if (mapped) return isPrivateIp(mapped[1]!);
-  if (ip === "::" || ip === "::1") return true;
-  const first = parseInt(ip.split(":")[0] || "0", 16);
+  const g = v6Groups(ip.replace(/%.*$/, "")); // sem o "%interface" do link-local
+  if (!g) return true; // parece IPv6 mas não é válido: na dúvida, recusa
+  const zeros = (n: number) => g.slice(0, n).every((x) => x === 0);
+  // ::/96 (inclui :: e ::1) e ::ffff:0:0/96: IPv4 embutido; o servidor escreve em hexadecimal
+  // ([::ffff:7f00:1] = 127.0.0.1), então a conferência é feita pelos números, não pelo texto.
+  if (zeros(6)) return true; // IPv4-compatível (obsoleto), :: e ::1
+  if (zeros(5) && g[5] === 0xffff) return isPrivateIp(v4From(g[6]!, g[7]!));
+  if (g[0] === 0x64 && g[1] === 0xff9b) {
+    // NAT64: 64:ff9b::/96 traduz para o IPv4 embutido; 64:ff9b:1::/48 é de uso local.
+    if (g[2] === 1) return true;
+    return isPrivateIp(v4From(g[6]!, g[7]!));
+  }
+  if (g[0] === 0x2002) return isPrivateIp(v4From(g[1]!, g[2]!)); // 6to4
+  if (g[0] === 0x2001 && g[1] === 0) return true; // Teredo
+  if (g[0] === 0x2001 && g[1] === 0xdb8) return true; // documentação
+  if (g[0] === 0x100 && g[1] === 0 && g[2] === 0 && g[3] === 0) return true; // 100::/64
+  const first = g[0]!;
   return (
     (first & 0xfe00) === 0xfc00 || // fc00::/7 (rede local)
     (first & 0xffc0) === 0xfe80 || // fe80::/10 (link-local)
+    (first & 0xffc0) === 0xfec0 || // fec0::/10 (site-local, obsoleto)
     (first & 0xff00) === 0xff00 // ff00::/8 (multicast)
   );
 }
@@ -60,8 +98,8 @@ const denoResolver: Resolver = (host, type) => Deno.resolveDns(host, type);
 
 /**
  * O endereço é público? Recusa nomes internos, IPs privados e nomes que resolvem para algum IP
- * privado. Se o DNS não estiver disponível no ambiente ou falhar, vale a checagem pelo texto
- * (não bloqueia todos os webhooks por limitação do ambiente); um nome inexistente falha na entrega.
+ * privado, e nomes que não existem no DNS. Se o DNS não estiver disponível no ambiente, vale a
+ * checagem pelo texto (não bloqueia todos os webhooks por limitação do ambiente).
  */
 export async function isPublicHost(hostname: string, resolve: Resolver | null = defaultResolver()) {
   const host = hostname
@@ -72,16 +110,23 @@ export async function isPublicHost(hostname: string, resolve: Resolver | null = 
   if (host.endsWith(".local") || host.endsWith(".internal") || host.endsWith(".lan")) return false;
   if (v4ToInt(host) !== null || host.includes(":")) return !isPrivateIp(host);
   if (!resolve) return true;
+  let found = 0;
+  let missing = 0;
   for (const type of ["A", "AAAA"] as const) {
     let ips: string[] = [];
     try {
       ips = await resolve(host, type);
-    } catch {
-      continue; // sem registro desse tipo, ou DNS indisponível
+    } catch (e) {
+      // Sem registro desse tipo; outro erro = DNS indisponível no ambiente (vale o texto).
+      if ((e as Error)?.name === "NotFound") missing++;
+      continue;
     }
     if (ips.some((ip) => isPrivateIp(ip))) return false;
+    found += ips.length;
+    if (!ips.length) missing++;
   }
-  return true;
+  // Nome que não existe (sem A nem AAAA): a entrega falharia de qualquer jeito; recusa já.
+  return !(found === 0 && missing === 2);
 }
 
 function defaultResolver(): Resolver | null {
