@@ -29,3 +29,22 @@ liberados, separados por vírgula. Sem o segredo, só e-mail.
 2. Registrar a evidência (data, documento, resultado).
 3. Gravar o segredo com os métodos aprovados, por exemplo:
    `npx supabase secrets set SIGNDOC_AUTH_METHODS=sms,certificate`
+
+## Conferência da instância (18/11/2026)
+
+- O Super Admin tem o quadro **"Métodos de autenticação no motor"** (função `admin-engine-check`,
+  só leitura): lê o contexto de segurança dos 5 documentos mais recentes e dos detalhes das
+  assinaturas e compara com `SIGNDOC_AUTH_METHODS`.
+- Resultado em 18/11/2026: o SignDoc devolve o campo `securityContext` **vazio** nas duas
+  consultas. O MDSign cria os documentos sem `securityContextId` (contexto padrão da instância), e
+  a API não tem endpoint para listar contextos. Não dá para saber pela API quais métodos estão
+  habilitados.
+- Chamado aberto na Lacuna perguntando:
+  1. métodos habilitados no contexto padrão (SMS, WhatsApp, selfie, Datavalid, prova de vida);
+  2. se há contexto com esses métodos e qual o `securityContextId`;
+  3. custo por uso de cada método e o que o contrato inclui;
+  4. se a licença do Web PKI cobre outros domínios (erro "Invalid license" no quadro embutido).
+- Próximo passo com a resposta: se houver `securityContextId`, enviar esse id na criação dos
+  documentos; depois, testar um método por vez (seção "Para liberar um nível").
+- Não confundir: **código por WhatsApp na assinatura** (SignDoc) × **convite e lembrete por
+  WhatsApp** (MDSign pelo BotConversa, funcionalidade `whatsapp`, hoje oculta).
