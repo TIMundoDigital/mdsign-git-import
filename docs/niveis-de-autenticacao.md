@@ -80,6 +80,10 @@ celular, numa organização com o e-mail próprio desligado (convites pelo SignD
   comercial). Recurso "em desenvolvimento" fica oculto em todos os planos, e o servidor recusa.
   Marcado como funcional pela responsável em 18/11/2026.
 - Planos: Jacarandá, Ipê e Mogno (Cedro em prévia). A tela só oferece o nível nesses planos.
-- Pendente: concluir a assinatura com o certificado (A1/A3) e conferir se o erro "Invalid
-  license" do Web PKI não aparece no quadro embutido. Se aparecer, voltar o recurso para
-  "em desenvolvimento".
+- **Homologado em 23/11/2026**, depois da atualização do SignDoc para a 3.3.1 (22/11): assinatura
+  com certificado A3 dentro do quadro embutido do MDSign, documento só com certificado concluído,
+  avisos do SignDoc recebidos e validação pública sem erros (ICP-Brasil, 17 verificações). O erro
+  "Invalid license" do Web PKI e o erro 7BD221 da 2.9 não apareceram mais.
+- O site passou a anunciar o certificado nos planos Jacarandá, Ipê e Mogno, e SMS e selfie como
+  fatores de autenticação. A assinatura não tem carimbo do tempo (depende da configuração da
+  organização no SignDoc).

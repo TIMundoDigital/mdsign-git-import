@@ -153,7 +153,7 @@ export const planComparison: { row: string; cells: Record<PlanId, CompareCell> }
   { row: "returnFix", cells: { cedro: "yes", jacaranda: "yes", ipe: "yes", mogno: "yes" } },
   { row: "reject", cells: { cedro: "yes", jacaranda: "yes", ipe: "yes", mogno: "yes" } },
   { row: "templates", cells: { cedro: "no", jacaranda: "yes", ipe: "yes", mogno: "yes" } },
-  { row: "certificate", cells: { cedro: "no", jacaranda: "soon", ipe: "soon", mogno: "soon" } },
+  { row: "certificate", cells: { cedro: "no", jacaranda: "yes", ipe: "yes", mogno: "yes" } },
   { row: "multiApproval", cells: { cedro: "no", jacaranda: "yes", ipe: "yes", mogno: "yes" } },
   { row: "team", cells: { cedro: "no", jacaranda: "no", ipe: "yes", mogno: "yes" } },
   { row: "reports", cells: { cedro: "no", jacaranda: "no", ipe: "basic", mogno: "advanced" } },

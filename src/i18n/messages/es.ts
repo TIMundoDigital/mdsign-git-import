@@ -230,16 +230,16 @@ const es: Messages = {
         text: "La firma electrónica tiene validez jurídica en Brasil, según la Medida Provisional 2.200-2/2001 y la Ley 14.063/2020, en los niveles simple, avanzado y cualificado.",
       },
       {
-        title: "Certificado digital ICP-Brasil (próximamente)",
-        text: "La firma con certificado ICP-Brasil (e-CPF y e-CNPJ) está en homologación y aún no está disponible.",
+        title: "Certificado digital ICP-Brasil",
+        text: "Firme con certificado ICP-Brasil (A1 o A3, incluso en token) en la propia pantalla de MDSign, en los planes Jacarandá, Ipê y Mogno.",
       },
       {
         title: "Electrónica o con certificado",
-        text: "En la firma electrónica, el firmante se identifica mediante los factores de autenticación del proceso. La firma con certificado digital llegará pronto, tras la homologación.",
+        text: "En la firma electrónica, el firmante se identifica mediante los factores de autenticación del proceso. En la firma con certificado, la identificación viene del propio certificado, y quien envía puede exigir solo esa forma.",
       },
       {
         title: "Autenticación del firmante",
-        text: "Hoy cada participante confirma su identidad por correo electrónico. Otros factores, como SMS y WhatsApp, están en homologación.",
+        text: "Cada participante confirma su identidad por correo electrónico y, según el documento, con un código enviado por SMS o con una selfie.",
       },
       {
         title: "Trazabilidad",
@@ -263,7 +263,7 @@ const es: Messages = {
     items: [
       {
         q: "¿La firma electrónica tiene validez jurídica?",
-        a: "Sí. La Medida Provisional 2.200-2/2001 y la Ley 14.063/2020 de Brasil reconocen la firma electrónica como válida para acreditar la autoría y la integridad de los documentos. La firma cualificada (ICP-Brasil) aún está en homologación en MDSign.",
+        a: "Sí. La Medida Provisional 2.200-2/2001 y la Ley 14.063/2020 de Brasil reconocen la firma electrónica como válida para acreditar la autoría y la integridad de los documentos. Cuando la ley exija firma cualificada (ICP-Brasil), use la firma con certificado digital, disponible en los planes Jacarandá, Ipê y Mogno.",
       },
       {
         q: "¿El firmante necesita crear una cuenta?",
@@ -271,7 +271,7 @@ const es: Messages = {
       },
       {
         q: "¿Puedo firmar con certificado digital?",
-        a: 'Todavía no. La firma con certificado ICP-Brasil (e-CPF y e-CNPJ) está en homologación y aparece como "Próximamente" en los planes. Hoy MDSign ofrece firma electrónica con evidencias.',
+        a: "Sí. En los planes Jacarandá, Ipê y Mogno, quien envía puede exigir la firma con certificado digital ICP-Brasil (A1 o A3). Quien firma usa el componente Web PKI en el navegador; la primera vez, la propia pantalla indica cómo instalarlo.",
       },
       {
         q: "¿Puedo tener varios usuarios en la empresa?",

@@ -221,16 +221,16 @@ const en: Messages = {
         text: "Electronic signatures are legally valid in Brazil under Provisional Measure 2.200-2/2001 and Law 14.063/2020, at the simple, advanced and qualified levels.",
       },
       {
-        title: "ICP-Brasil digital certificate (coming soon)",
-        text: "Signing with an ICP-Brasil certificate (e-CPF and e-CNPJ) is under certification and not available yet.",
+        title: "ICP-Brasil digital certificate",
+        text: "Sign with an ICP-Brasil certificate (A1 or A3, including tokens) right on the MDSign screen, on the Jacarandá, Ipê and Mogno plans.",
       },
       {
         title: "Electronic or certificate-based",
-        text: "With an electronic signature, the signer is identified by the authentication factors of the process. Digital certificate signatures are coming soon, after certification.",
+        text: "With an electronic signature, the signer is identified by the authentication factors of the process. With a certificate signature, the certificate itself identifies the signer, and the sender can require it as the only option.",
       },
       {
         title: "Signer authentication",
-        text: "Today each participant confirms their identity by email. Other factors, such as SMS and WhatsApp, are under certification.",
+        text: "Each participant confirms their identity by email and, depending on the document, with a code sent by SMS or a selfie.",
       },
       {
         title: "Traceability",
@@ -253,7 +253,7 @@ const en: Messages = {
     items: [
       {
         q: "Is an electronic signature legally valid?",
-        a: "Yes. Brazilian Provisional Measure 2.200-2/2001 and Law 14.063/2020 recognize electronic signatures as valid proof of a document's authorship and integrity. Qualified (ICP-Brasil) signatures are still under certification in MDSign.",
+        a: "Yes. Brazilian Provisional Measure 2.200-2/2001 and Law 14.063/2020 recognize electronic signatures as valid proof of a document's authorship and integrity. When the law requires a qualified (ICP-Brasil) signature, use the digital certificate signature, available on the Jacarandá, Ipê and Mogno plans.",
       },
       {
         q: "Does the signer need to create an account?",
@@ -261,7 +261,7 @@ const en: Messages = {
       },
       {
         q: "Can I sign with a digital certificate?",
-        a: 'Not yet. ICP-Brasil certificate signatures (e-CPF and e-CNPJ) are under certification and shown as "Coming soon" in the plans. Today MDSign offers electronic signatures with evidence.',
+        a: "Yes. On the Jacarandá, Ipê and Mogno plans, the sender can require an ICP-Brasil digital certificate signature (A1 or A3). The signer uses the Web PKI component in the browser; the first time, the signing screen shows how to install it.",
       },
       {
         q: "Can I have several users in my company?",

@@ -26,7 +26,7 @@
 | Front | Lovable, projeto `33353745-27fd-4380-8a2b-929ec05aac8b`, publicado em https://mdsign-new.lovable.app (push na `main` sincroniza; depois, **Publish → Update** no Lovable). O endereço antigo `mdsign.lovable.app` não é mais nosso e não deve constar em `ALLOWED_ORIGINS` nem nas URLs do Auth |
 | Supabase de **homologação** | projeto `vrksxqbopteeyeovdwpu` ("MDSign", us-east-1), transferido para a organização da MDTech em 11/11/2026 |
 | Supabase de **produção** | a criar em **sa-east-1** (São Paulo), ver `docs/migracao-sa-east-1.md` |
-| Motor | https://sign.signdocmd.com.br (SignDoc 2.9), aplicação "MDSign" |
+| Motor | https://sign.signdocmd.com.br (SignDoc 3.3.1 desde 22/11/2026; antes 2.9), aplicação "MDSign" |
 
 - O projeto `vrksxqbopteeyeovdwpu` é o mesmo de antes da migração: em vez de copiar os dados, ele
   foi transferido da conta pessoal para a organização da MDTech. Os valores padrão do código
@@ -200,11 +200,10 @@ Não há clientes reais: todas as contas são de teste.
    - Uma única chave no Resend, "MDSign Login" (só envio, só `mdsign.app`), usada pelo SMTP do
      login e pelas funções (`RESEND_API_KEY`). Se revogar, gravar a nova nos dois lugares.
    - O domínio `mail.mundodigitaltech.com.br`, que ficou pela metade no Resend, não é mais usado.
-2. **Certificado digital: "Invalid license"** ao assinar com A3 dentro do quadro embutido.
-   Hipótese: a licença do Web PKI cobre só `sign.signdocmd.com.br`. Próximo teste: assinar o mesmo
-   documento direto no SignDoc. Se funcionar, pedir à Lacuna a inclusão do domínio do MDSign ou
-   abrir a assinatura com certificado em nova aba; se falhar, abrir chamado na Lacuna. Até lá, o
-   site diz "ICP-Brasil em breve".
+2. **Certificado digital: homologado em 23/11/2026** (A3, dentro do quadro do MDSign, depois da
+   atualização do SignDoc para a 3.3.1). O site anuncia o certificado do Jacarandá em diante.
+   Próximo: "Assinar todos" (plano: lote público da 3.3 via `notify-pending` para eletrônica e
+   aprovação; lote com certificado no MDSign pela documentação da Lacuna), aguardando aprovação.
 3. **P0-12, roteiros de homologação** com envios reais (a responsável pediu para deixar para
    depois).
 4. **Outras pendências:**

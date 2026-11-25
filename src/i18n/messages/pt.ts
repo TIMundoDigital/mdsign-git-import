@@ -223,16 +223,16 @@ const pt = {
         text: "A assinatura eletrônica tem validade jurídica no Brasil, conforme a MP 2.200-2/2001 e a Lei 14.063/2020, nos níveis simples, avançado e qualificado.",
       },
       {
-        title: "Certificado digital ICP-Brasil (em breve)",
-        text: "A assinatura com certificado ICP-Brasil (e-CPF e e-CNPJ) está em homologação e ainda não está disponível.",
+        title: "Certificado digital ICP-Brasil",
+        text: "Assine com certificado ICP-Brasil (A1 ou A3, inclusive em token) na própria tela do MDSign, nos planos Jacarandá, Ipê e Mogno.",
       },
       {
         title: "Eletrônica ou com certificado",
-        text: "Na assinatura eletrônica, o signatário é identificado pelos fatores de autenticação do processo. A assinatura com certificado digital chegará em breve, após homologação.",
+        text: "Na assinatura eletrônica, o signatário é identificado pelos fatores de autenticação do processo. Na assinatura com certificado, a identificação vem do próprio certificado, e quem envia pode exigir só essa forma.",
       },
       {
         title: "Autenticação do signatário",
-        text: "Hoje cada participante confirma a identidade pelo e-mail. Outros fatores, como SMS e WhatsApp, estão em homologação.",
+        text: "Cada participante confirma a identidade pelo e-mail e, conforme o documento, por código enviado por SMS ou por selfie.",
       },
       {
         title: "Rastreabilidade",
@@ -256,7 +256,7 @@ const pt = {
     items: [
       {
         q: "A assinatura eletrônica tem validade jurídica?",
-        a: "Sim. A MP 2.200-2/2001 e a Lei 14.063/2020 reconhecem a assinatura eletrônica como válida para comprovar a autoria e a integridade de documentos. Quando a lei exigir assinatura qualificada (ICP-Brasil), esse recurso ainda está em homologação no MDSign.",
+        a: "Sim. A MP 2.200-2/2001 e a Lei 14.063/2020 reconhecem a assinatura eletrônica como válida para comprovar a autoria e a integridade de documentos. Quando a lei exigir assinatura qualificada (ICP-Brasil), use a assinatura com certificado digital, disponível nos planos Jacarandá, Ipê e Mogno.",
       },
       {
         q: "O signatário precisa criar uma conta?",
@@ -264,7 +264,7 @@ const pt = {
       },
       {
         q: "Posso assinar com certificado digital?",
-        a: 'Ainda não. A assinatura com certificado digital ICP-Brasil (e-CPF e e-CNPJ) está em homologação e aparece como "Em breve" nos planos. Hoje o MDSign oferece assinatura eletrônica com evidências.',
+        a: "Sim. Nos planos Jacarandá, Ipê e Mogno, quem envia pode exigir a assinatura com certificado digital ICP-Brasil (A1 ou A3). Quem assina usa o componente Web PKI no navegador; na primeira vez, a própria tela indica a instalação.",
       },
       {
         q: "Posso ter vários usuários na empresa?",

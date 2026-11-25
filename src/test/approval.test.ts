@@ -43,12 +43,12 @@ describe("página de planos", () => {
     expect(plans.find((p) => p.id === "ipe")?.price).toBe("R$ 99,97");
   });
 
-  it("API, envio em massa e suporte contratual só no Mogno; certificado ainda não anunciado", () => {
+  it("API, envio em massa e suporte contratual só no Mogno; certificado do Jacarandá em diante", () => {
     const row = (r: string) => planComparison.find((x) => x.row === r)!.cells;
     for (const r of ["api", "bulk"]) {
       expect(row(r)).toEqual({ cedro: "no", jacaranda: "no", ipe: "no", mogno: "yes" });
     }
-    expect(Object.values(row("certificate"))).not.toContain("yes");
+    expect(row("certificate")).toEqual({ cedro: "no", jacaranda: "yes", ipe: "yes", mogno: "yes" });
     expect(row("templates").cedro).toBe("no");
   });
 });
