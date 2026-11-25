@@ -71,7 +71,8 @@ export type DocumentAction =
   | "remind"
   | "refuse"
   | "delete"
-  | "whatsapp";
+  | "whatsapp"
+  | "batch-link";
 
 export function documentAction<T = Record<string, unknown>>(
   documentId: string,

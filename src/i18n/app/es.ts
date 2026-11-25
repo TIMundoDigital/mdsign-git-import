@@ -1250,6 +1250,11 @@ const es: AppMessages = {
     signAllCount: "{n} documentos esperando por ti.",
     signAllOne: "1 documento esperando por ti.",
     signAllHint: "Firma en secuencia: al terminar uno, el siguiente se abre solo.",
+    batchLink: "Firmar todo de una vez",
+    batchLinkHint:
+      "SignDoc envía a tu correo un único enlace. Con él firmas y apruebas todos los pendientes de una vez, sin iniciar sesión.",
+    batchLinkSent:
+      "Enviamos a {email} un correo de SignDoc con un enlace para firmar y aprobar todo de una vez. Revisa también la carpeta de spam.",
     tabs: { all: "Todos", waiting: "Pendientes", forMe: "Para mí", concluded: "Concluidos" },
     empty: "Todavía no hay documentos aquí.",
     emptyAction: "Firmar un documento",
@@ -1345,6 +1350,7 @@ const es: AppMessages = {
       "document.share_opened": "{name} abrió la copia del documento firmado",
       "document.share_revoked": "{name} revocó una copia del documento firmado",
       "participant.link_opened": "{name} abrió el enlace de firma",
+      "participant.batch_link_requested": "{name} pidió el enlace para firmar todo de una vez",
       "participant.reminded": "Recordatorio enviado a {name}",
       "document.concluded": "Documento concluido",
       "document.canceled": "Documento cancelado",
@@ -1377,6 +1383,9 @@ const es: AppMessages = {
     invalid_emails: "Revise los correos: hasta 10, con el formato nombre@dominio.com.",
     nothing_to_refuse: "No es tu turno en este documento.",
     nothing_to_sign: "No tienes firma ni aprobación pendiente en este documento.",
+    batch_link_too_soon:
+      "Pediste este enlace hace poco. Revisa la bandeja de entrada y el spam, o inténtalo de nuevo en 5 minutos.",
+    feature_unavailable: "Esta función aún no está disponible.",
     not_your_turn:
       "Tu turno en este documento aún no ha llegado: sigue el orden definido por quien lo envió. Recibirás un aviso cuando sea tu turno.",
     document_delete_concluded: "Los documentos concluidos no se pueden eliminar.",

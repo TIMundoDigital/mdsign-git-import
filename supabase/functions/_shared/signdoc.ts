@@ -251,6 +251,14 @@ export const signdoc = {
   refuse(id: string, reason: string) {
     return call<null>("POST", `/api/documents/${id}/refusal`, { reason });
   },
+  /**
+   * E-mail agrupado do SignDoc com as pendências de cada endereço. Na 3.3+, com
+   * PublicBatchSignatureEnabled, o botão "Ver documentos" abre a tela de lote: a pessoa assina e
+   * aprova tudo de uma vez, sem login.
+   */
+  notifyPending(emails: string[]) {
+    return call<null>("POST", "/api/users/notify-pending", { emails });
+  },
   remind(documentId: string, flowActionId: string) {
     return call<null>("POST", "/api/notifications/flow-action-reminder", {
       documentId,
@@ -259,6 +267,9 @@ export const signdoc = {
   },
   baseUrl: BASE_URL,
 };
+
+/** Lote sem login do SignDoc (3.3+, PublicBatchSignatureEnabled): segredo SIGNDOC_PUBLIC_BATCH=true. */
+export const publicBatchEnabled = () => Deno.env.get("SIGNDOC_PUBLIC_BATCH") === "true";
 
 /** Status do motor → status do MDSign. */
 export function mapDocumentStatus(status: EngineDocument["status"]) {

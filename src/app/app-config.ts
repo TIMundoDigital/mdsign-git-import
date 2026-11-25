@@ -23,6 +23,8 @@ export type AppConfig = {
   whatsappConfigured: boolean;
   /** Grupos com quórum ("qualquer N do grupo"): política ligada ou Super Admin. */
   quorumGroups?: boolean;
+  /** Lote sem login do SignDoc 3.3: "Assinar tudo de uma vez" pelo e-mail de pendências. */
+  publicBatch?: boolean;
   /** E-mail próprio (Resend): "test" = remetente de teste (só Super Admin). */
   ownEmail?: "off" | "test" | "on";
   /** false até a resposta do servidor chegar (evita avisos piscando com o valor padrão). */

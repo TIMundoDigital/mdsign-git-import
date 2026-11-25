@@ -1233,6 +1233,11 @@ const en: AppMessages = {
     signAllCount: "{n} documents waiting for you.",
     signAllOne: "1 document waiting for you.",
     signAllHint: "Sign in sequence: when you finish one, the next opens automatically.",
+    batchLink: "Sign everything at once",
+    batchLinkHint:
+      "SignDoc sends a single link to your email. With it you sign and approve all pending documents at once, without logging in.",
+    batchLinkSent:
+      "We sent {email} a SignDoc email with a link to sign and approve everything at once. Check your spam folder too.",
     tabs: { all: "All", waiting: "Waiting", forMe: "For me", concluded: "Completed" },
     empty: "No documents here yet.",
     emptyAction: "Sign a document",
@@ -1328,6 +1333,7 @@ const en: AppMessages = {
       "document.share_opened": "{name} opened the copy of the signed document",
       "document.share_revoked": "{name} revoked a copy of the signed document",
       "participant.link_opened": "{name} opened the signing link",
+      "participant.batch_link_requested": "{name} requested the link to sign everything at once",
       "participant.reminded": "Reminder sent to {name}",
       "document.concluded": "Document completed",
       "document.canceled": "Document canceled",
@@ -1358,6 +1364,9 @@ const en: AppMessages = {
     invalid_emails: "Check the emails: up to 10, formatted as name@domain.com.",
     nothing_to_refuse: "It is not your turn on this document.",
     nothing_to_sign: "You have no pending signature or approval on this document.",
+    batch_link_too_soon:
+      "You requested this link a moment ago. Check your inbox and spam folder, or try again in 5 minutes.",
+    feature_unavailable: "This feature is not available yet.",
     not_your_turn:
       "Your turn on this document has not come yet: it follows the order set by the sender. You will be notified when it is your turn.",
     document_delete_concluded: "Completed documents cannot be deleted.",

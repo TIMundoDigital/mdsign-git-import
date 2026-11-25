@@ -14,6 +14,8 @@ export type EngineState = {
   refusals: { id: string; reason: string }[];
   /** true = o motor responde erro na próxima recusa. */
   failRefusal?: boolean;
+  /** E-mails pedidos em POST /api/users/notify-pending (e-mail agrupado de pendências). */
+  notifyPending?: string[][];
 };
 
 export type FakeBackend = {
@@ -54,6 +56,15 @@ function matches(row: Row, column: string, expr: string): boolean {
     case "eq":
       ok = String(value) === String(parseValue(raw));
       break;
+    case "ilike": {
+      // Sem curingas além de %: comparação sem diferenciar maiúsculas.
+      const pattern = String(parseValue(raw))
+        .toLowerCase()
+        .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+        .replace(/%/g, ".*");
+      ok = value != null && new RegExp(`^${pattern}$`).test(String(value).toLowerCase());
+      break;
+    }
     case "neq":
       ok = String(value) !== String(parseValue(raw));
       break;
@@ -324,6 +335,11 @@ export function installFakeBackend(opts: {
       doc["status"] = "Canceled";
       doc["statusUpdateReason"] = String(((await req.json()) as Row)["reason"] ?? "");
       doc["updateDate"] = "2026-11-18T12:00:00Z";
+      return new Response(null, { status: 200 });
+    }
+    if (req.method === "POST" && url.pathname === "/api/users/notify-pending") {
+      const { emails } = (await req.json()) as { emails: string[] };
+      (engine.notifyPending ??= []).push(emails);
       return new Response(null, { status: 200 });
     }
     const m = /^\/api\/documents\/([0-9a-f-]+)$/i.exec(url.pathname);

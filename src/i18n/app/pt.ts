@@ -1260,6 +1260,11 @@ const pt = {
     signAllCount: "{n} documentos esperando por você.",
     signAllOne: "1 documento esperando por você.",
     signAllHint: "Assine em sequência: ao terminar um, o próximo abre sozinho.",
+    batchLink: "Assinar tudo de uma vez",
+    batchLinkHint:
+      "O SignDoc envia para o seu e-mail um único link. Por ele você assina e aprova todos os pendentes de uma vez, sem login.",
+    batchLinkSent:
+      "Enviamos para {email} um e-mail do SignDoc com um link para assinar e aprovar tudo de uma vez. Confira também o lixo eletrônico.",
     tabs: { all: "Todos", waiting: "Aguardando", forMe: "Para mim", concluded: "Concluídos" },
     empty: "Nenhum documento por aqui ainda.",
     emptyAction: "Assinar um documento",
@@ -1354,6 +1359,7 @@ const pt = {
       "document.share_opened": "{name} abriu a cópia do documento assinado",
       "document.share_revoked": "{name} revogou uma cópia do documento assinado",
       "participant.link_opened": "{name} abriu o link de assinatura",
+      "participant.batch_link_requested": "{name} pediu o link para assinar tudo de uma vez",
       "participant.reminded": "Lembrete enviado para {name}",
       "document.concluded": "Documento concluído",
       "document.canceled": "Documento cancelado",
@@ -1384,6 +1390,9 @@ const pt = {
     invalid_emails: "Confira os e-mails: até 10, no formato nome@dominio.com.",
     nothing_to_refuse: "Não é a sua vez neste documento.",
     nothing_to_sign: "Você não tem assinatura ou aprovação pendente neste documento.",
+    batch_link_too_soon:
+      "Você pediu esse link há pouco. Confira a caixa de entrada e o lixo eletrônico, ou tente de novo em 5 minutos.",
+    feature_unavailable: "Este recurso ainda não está disponível.",
     not_your_turn:
       "A sua vez neste documento ainda não chegou: ele segue a ordem definida por quem enviou. Você será avisado quando chegar a sua vez.",
     document_delete_concluded: "Documentos concluídos não podem ser excluídos.",

@@ -5,6 +5,7 @@ import { admin, requireUser } from "../_shared/auth.ts";
 import { AppError, corsHeaders, handleError, json } from "../_shared/http.ts";
 import { emailConfigured, emailTestMode } from "../_shared/email.ts";
 import { availableAuthLevels, identifierOptional } from "../_shared/participants.ts";
+import { publicBatchEnabled } from "../_shared/signdoc.ts";
 
 Deno.serve(async (req) => {
   const origin = req.headers.get("origin");
@@ -25,6 +26,8 @@ Deno.serve(async (req) => {
         // WhatsApp do MDSign (provedor configurado nos segredos; só o sim/não vem para o app).
         whatsappConfigured: Boolean(Deno.env.get("BOTCONVERSA_API_KEY")),
         quorumGroups: Boolean(policy?.active || platformAdmin),
+        // Lote sem login do SignDoc 3.3 (PublicBatchSignatureEnabled ligado no motor).
+        publicBatch: publicBatchEnabled(),
         // E-mail próprio (Resend): "test" = remetente de teste, só para o Super Admin.
         ownEmail: !emailConfigured()
           ? "off"

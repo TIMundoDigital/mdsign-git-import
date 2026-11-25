@@ -11,7 +11,7 @@ import {
   processNotifications,
   whatsappConfigured,
 } from "../_shared/notifications.ts";
-import { signdoc } from "../_shared/signdoc.ts";
+import { publicBatchEnabled, signdoc } from "../_shared/signdoc.ts";
 
 type Body = {
   documentId?: string;
@@ -24,7 +24,8 @@ type Body = {
     | "remind"
     | "refuse"
     | "delete"
-    | "whatsapp";
+    | "whatsapp"
+    | "batch-link";
   participantId?: string;
   attachmentId?: string;
   reason?: string;
@@ -102,6 +103,72 @@ async function recordViewed(doc: Doc, participantId: string, caller: Caller) {
   }
 }
 
+/** Intervalo mínimo entre dois pedidos de "link para assinar tudo" da mesma pessoa. */
+export const BATCH_LINK_INTERVAL_MS = 5 * 60 * 1000;
+
+/**
+ * "Assinar tudo de uma vez": pede ao SignDoc o e-mail agrupado das pendências de quem chama
+ * (POST /api/users/notify-pending). Na 3.3+, o botão "Ver documentos" desse e-mail abre a tela de
+ * lote sem login, onde a pessoa assina e aprova tudo; as evidências ficam com o SignDoc.
+ * Só documentos pendentes do MDSign em que é a vez da pessoa; no máximo 1 pedido a cada 5 min.
+ */
+async function batchLink(caller: Caller) {
+  if (!publicBatchEnabled()) throw new AppError("feature_unavailable", 404);
+  const raw = caller.user.email?.toLowerCase() ?? "";
+  // O e-mail entra num filtro do PostgREST: só caracteres comuns de endereço (sem vírgula etc.).
+  const email = /^[a-z0-9._+-]+@[a-z0-9.-]+$/.test(raw) ? raw : "";
+  const filter = email
+    ? `user_id.eq.${caller.user.id},email.ilike.${email}`
+    : `user_id.eq.${caller.user.id}`;
+  const { data: rows } = await admin
+    .from("document_participants")
+    .select("id, name, email, document_id, user_id")
+    .eq("status", "pending")
+    .or(filter);
+  // No ilike o "_" é curinga: confere o endereço exato para nunca pegar o de outra pessoa.
+  const own = (rows ?? []).filter(
+    (p) =>
+      p.user_id === caller.user.id || (email && String(p.email).trim().toLowerCase() === email),
+  );
+  const ids = [...new Set(own.map((p) => p.document_id as string))];
+  const { data: docs } = ids.length
+    ? await admin
+        .from("documents")
+        .select("id, organization_id")
+        .in("id", ids)
+        .eq("status", "pending")
+        .is("deleted_at", null)
+    : { data: [] };
+  const orgOf = new Map((docs ?? []).map((d) => [d.id as string, d.organization_id as string]));
+  const mine = own.filter((p) => orgOf.has(p.document_id as string));
+  if (!mine.length) throw new AppError("nothing_to_sign", 409);
+
+  const since = new Date(Date.now() - BATCH_LINK_INTERVAL_MS).toISOString();
+  const { data: recent } = await admin
+    .from("document_events")
+    .select("data")
+    .eq("type", "participant.batch_link_requested")
+    .in("document_id", [...orgOf.keys()])
+    .gte("occurred_at", since);
+  if ((recent ?? []).some((e) => (e.data as { user?: string } | null)?.user === caller.user.id))
+    throw new AppError("batch_link_too_soon", 429);
+
+  const emails = [...new Set(mine.map((p) => String(p.email).trim().toLowerCase()))];
+  await signdoc.notifyPending(emails);
+  await admin.from("document_events").insert(
+    mine.map((p) => ({
+      document_id: p.document_id,
+      organization_id: orgOf.get(p.document_id as string),
+      type: "participant.batch_link_requested",
+      occurred_at: new Date().toISOString(),
+      actor_name: p.name ?? caller.profile.full_name ?? null,
+      source: "mdsign",
+      data: { participant: p.id, user: caller.user.id },
+    })),
+  );
+  return { documents: orgOf.size, emails };
+}
+
 /** Tamanho mínimo da justificativa do cancelamento (a tela confere o mesmo). */
 const CANCEL_REASON_MIN = 5;
 Deno.serve(async (req) => {
@@ -111,6 +178,8 @@ Deno.serve(async (req) => {
     if (req.method !== "POST") throw new AppError("method_not_allowed", 405);
     const caller = await requireUser(req);
     const body = (await req.json()) as Body;
+    // Ação da pessoa, não de um documento: vale para todas as pendências dela.
+    if (body.action === "batch-link") return json(await batchLink(caller), 200, origin);
     if (!body.documentId || !body.action) throw new AppError("invalid_request");
     const doc = await loadVisible(caller, body.documentId);
 

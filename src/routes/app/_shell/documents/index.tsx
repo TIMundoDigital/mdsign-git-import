@@ -9,6 +9,7 @@ import {
   FileText,
   Folder as FolderIcon,
   Loader2,
+  MailCheck,
   PenLine,
   Settings2,
   Trash2,
@@ -17,7 +18,8 @@ import {
 import { toast } from "sonner";
 
 import { useAuth } from "@/app/auth";
-import { callFunctionBlob, documentAction } from "@/app/api";
+import { callFunction, callFunctionBlob, documentAction } from "@/app/api";
+import { useAppConfig } from "@/app/app-config";
 import { downloadBlob } from "@/app/report-export";
 import { useCedroAvailability } from "@/app/availability";
 import { PageHeader } from "@/app/components/app-shell";
@@ -67,6 +69,8 @@ function DocumentsPage() {
   const { t, f, locale } = useAppI18n();
   const availability = useCedroAvailability();
   const { user } = useAuth();
+  const config = useAppConfig();
+  const [batchLinking, setBatchLinking] = useState(false);
   const { current, can } = useOrg();
   const search = Route.useSearch();
   const [tab, setTab] = useState<Tab>(search.tab ?? "all");
@@ -89,6 +93,23 @@ function DocumentsPage() {
   } | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [confirm, confirmDialog] = useConfirm();
+
+  // "Assinar tudo de uma vez": o SignDoc manda à pessoa um e-mail com um único link (lote sem login).
+  const requestBatchLink = async () => {
+    setBatchLinking(true);
+    try {
+      const r = await callFunction<{ emails: string[] }>("documents-action", {
+        action: "batch-link",
+      });
+      toast.success(f(t.documents.batchLinkSent, { email: r.emails.join(", ") }), {
+        duration: 10000,
+      });
+    } catch (e) {
+      toast.error(errorText(t, e));
+    } finally {
+      setBatchLinking(false);
+    }
+  };
 
   // Depende só do id: o objeto da organização é recriado quando o app atualiza o contexto,
   // e isso não pode recarregar a lista (nem limpar a seleção).
@@ -434,14 +455,32 @@ function DocumentsPage() {
                 </span>{" "}
                 <span className="text-muted-foreground">{t.documents.signAllHint}</span>
               </p>
-              <Button
-                size="sm"
-                className="bg-brand hover:bg-brand-strong"
-                onClick={() => setQueue(mine)}
-              >
-                <PenLine aria-hidden />
-                {f(t.documents.signAll, { n: String(mine.length) })}
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                {config.publicBatch && mine.length > 1 && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    title={t.documents.batchLinkHint}
+                    disabled={batchLinking}
+                    onClick={() => void requestBatchLink()}
+                  >
+                    {batchLinking ? (
+                      <Loader2 className="animate-spin" aria-hidden />
+                    ) : (
+                      <MailCheck aria-hidden />
+                    )}
+                    {t.documents.batchLink}
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  className="bg-brand hover:bg-brand-strong"
+                  onClick={() => setQueue(mine)}
+                >
+                  <PenLine aria-hidden />
+                  {f(t.documents.signAll, { n: String(mine.length) })}
+                </Button>
+              </div>
             </div>
           )}
           <div className="mb-2 flex flex-wrap items-center gap-3 text-sm">

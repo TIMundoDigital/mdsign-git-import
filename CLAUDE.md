@@ -65,7 +65,7 @@
 - **Testes e checagens Deno só numa cópia fora do repositório**, nunca na raiz (quebra o
   `node_modules`; nesse caso, `rm -rf node_modules && npx -y bun@1 install --frozen-lockfile`):
   `cp -R supabase /tmp/x && cd /tmp/x && SUPABASE_URL=http://127.0.0.1:9 SUPABASE_SERVICE_ROLE_KEY=teste SUPABASE_ANON_KEY=teste SIGNDOC_API_KEY=teste SIGNDOC_WEBHOOK_TOKEN=token-de-teste npx -y deno@2.9.6 test -A tests/`
-  (66 testes em 18/11/2026; banco, login, SignDoc, Asaas, Resend e Storage simulados em
+  (72 testes em 25/11/2026; banco, login, SignDoc, Asaas, Resend e Storage simulados em
   `supabase/tests/fake_backend.ts`).
 - CI do GitHub (`.github/workflows/ci.yml`): etapas verificar, servidor e banco. Resultado sem
   login pela API pública (limite de 60 consultas por hora).
@@ -162,6 +162,11 @@ Não há clientes reais: todas as contas são de teste.
   Conferência dos métodos no Super Admin (`admin-engine-check`). Ver `docs/niveis-de-autenticacao.md`.
 - **Cancelamento:** justificativa obrigatória (5+ caracteres) na tela e no servidor; vai ao
   SignDoc e aparece na linha do tempo (`statusUpdateReason`). Pela API continua opcional.
+- **Assinar tudo de uma vez** (aba "Para mim", com 2+ pendências): ação `batch-link` de
+  `documents-action` chama `POST /api/users/notify-pending`; o e-mail agrupado do SignDoc 3.3 abre
+  o lote sem login (assinatura e aprovação). Só aparece com `SIGNDOC_PUBLIC_BATCH=true` (e
+  `General:PublicBatchSignatureEnabled` ligado no SignDoc); 1 pedido a cada 5 min por pessoa;
+  evento `participant.batch_link_requested` na linha do tempo.
 - **Estrangeiros sem CPF:** código pronto (`SIGNDOC_IDENTIFIER_OPTIONAL=true` mais
   `CountryIdentifierMode=Nullable` no SignDoc). Só tratar na versão final.
 
@@ -223,6 +228,7 @@ Não há clientes reais: todas as contas são de teste.
 
 `ALLOWED_ORIGINS`, `ASAAS_API_KEY`, `ASAAS_ENV`, `ASAAS_WEBHOOK_TOKEN`, `BOTCONVERSA_API_KEY`,
 `CRON_SECRET`, `EMAIL_FROM`, `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET`, `SIGNDOC_ADMIN_API_KEY`,
-`SIGNDOC_API_KEY`, `SIGNDOC_WEBHOOK_TOKEN`, `WHATSAPP_WEBHOOK_SECRET`.
+`SIGNDOC_API_KEY`, `SIGNDOC_WEBHOOK_TOKEN`, `WHATSAPP_WEBHOOK_SECRET`. Chaves de liberação (não são
+segredos): `SIGNDOC_AUTH_METHODS`, `SIGNDOC_IDENTIFIER_OPTIONAL`, `SIGNDOC_PUBLIC_BATCH`.
 
 Para conferir sem expor os valores: `npx supabase secrets list` (a saída mostra só hashes).
